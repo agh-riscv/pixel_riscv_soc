@@ -44,14 +44,13 @@ always_comb begin
 
     if (req) begin
         case (addr[11:0])
-            `SPI_CR_OFFSET:     requested_reg = SPI_CR;
-            `SPI_SR_OFFSET:     requested_reg = SPI_SR;
-            `SPI_TDR_OFFSET:    requested_reg = SPI_TDR;
-            `SPI_RDR_OFFSET:    requested_reg = SPI_RDR;
-            `SPI_CDR_OFFSET:    requested_reg = SPI_CDR;
+        `SPI_CR_OFFSET:     requested_reg = SPI_CR;
+        `SPI_SR_OFFSET:     requested_reg = SPI_SR;
+        `SPI_TDR_OFFSET:    requested_reg = SPI_TDR;
+        `SPI_RDR_OFFSET:    requested_reg = SPI_RDR;
+        `SPI_CDR_OFFSET:    requested_reg = SPI_CDR;
         endcase
     end
-
     gnt = requested_reg != SPI_NONE;
 end
 

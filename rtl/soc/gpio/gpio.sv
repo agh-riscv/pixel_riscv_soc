@@ -18,13 +18,10 @@
 import gpio_pkg::*;
 
 module gpio (
-    output logic        irq,
-    output logic [31:0] io_out,
     input logic         clk,
     input logic         rst_n,
-    input logic [31:0]  io_in,
-
-    ibex_data_bus.slave data_bus
+    ibex_data_bus.slave data_bus,
+    soc_gpio_bus.master gpio_bus
 );
 
 
@@ -41,10 +38,9 @@ logic [31:0] interrupt_detected;
  * Signals assignments
  */
 
-assign irq =| gpio.isr;
-assign io_out = gpio.odr;
-
 assign data_bus.err = 1'b0;
+assign gpio_bus.irq =| gpio.isr;
+assign gpio_bus.dout = gpio.odr;
 
 
 /**
@@ -65,7 +61,7 @@ gpio_interrupt_detector u_gpio_interrupt_detector (
     .interrupt_detected,
     .clk,
     .rst_n,
-    .io_in,
+    .io_in(gpio_bus.din),
     .ier(gpio.ier),
     .rier(gpio.rier),
     .fier(gpio.fier)
@@ -90,17 +86,17 @@ always_ff @(posedge clk or negedge rst_n) begin
         gpio.fier <= 32'b0;
     end
     else begin
-        gpio.idr <= io_in;
+        gpio.idr <= gpio_bus.din;
 
         if (data_bus.we) begin
             case (requested_reg)
-                GPIO_CR:    gpio.cr <= data_bus.wdata;
-                GPIO_SR:    gpio.sr <= data_bus.wdata;
-                GPIO_ODR:   gpio.odr <= data_bus.wdata;
-                GPIO_IER:   gpio.ier <= data_bus.wdata;
-                GPIO_ISR:   gpio.isr <= data_bus.wdata;
-                GPIO_RIER:  gpio.rier <= data_bus.wdata;
-                GPIO_FIER:  gpio.fier <= data_bus.wdata;
+            GPIO_CR:    gpio.cr <= data_bus.wdata;
+            GPIO_SR:    gpio.sr <= data_bus.wdata;
+            GPIO_ODR:   gpio.odr <= data_bus.wdata;
+            GPIO_IER:   gpio.ier <= data_bus.wdata;
+            GPIO_ISR:   gpio.isr <= data_bus.wdata;
+            GPIO_RIER:  gpio.rier <= data_bus.wdata;
+            GPIO_FIER:  gpio.fier <= data_bus.wdata;
             endcase
         end
 
@@ -121,15 +117,15 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
     end
     else begin
-        case(requested_reg)
-            GPIO_CR:    data_bus.rdata <= gpio.cr;
-            GPIO_SR:    data_bus.rdata <= gpio.sr;
-            GPIO_ODR:   data_bus.rdata <= gpio.odr;
-            GPIO_IDR:   data_bus.rdata <= gpio.idr;
-            GPIO_IER:   data_bus.rdata <= gpio.ier;
-            GPIO_ISR:   data_bus.rdata <= gpio.isr;
-            GPIO_RIER:  data_bus.rdata <= gpio.rier;
-            GPIO_FIER:  data_bus.rdata <= gpio.fier;
+        case (requested_reg)
+        GPIO_CR:    data_bus.rdata <= gpio.cr;
+        GPIO_SR:    data_bus.rdata <= gpio.sr;
+        GPIO_ODR:   data_bus.rdata <= gpio.odr;
+        GPIO_IDR:   data_bus.rdata <= gpio.idr;
+        GPIO_IER:   data_bus.rdata <= gpio.ier;
+        GPIO_ISR:   data_bus.rdata <= gpio.isr;
+        GPIO_RIER:  data_bus.rdata <= gpio.rier;
+        GPIO_FIER:  data_bus.rdata <= gpio.fier;
         endcase
     end
 end

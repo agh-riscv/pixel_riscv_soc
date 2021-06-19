@@ -18,11 +18,10 @@
 import pmc_dc_pkg::*;
 
 module pmc_dc (
-    input logic clk,
-    input logic rst_n,
-
-    ibex_data_bus.slave     data_bus,
-    pmc_digital_conf.master digital_conf
+    input logic                  clk,
+    input logic                  rst_n,
+    ibex_data_bus.slave          data_bus,
+    soc_pm_digital_config.master pm_digital_config
 );
 
 
@@ -38,8 +37,8 @@ pmc_dc_reg_t requested_reg;
  * Signals assignments
  */
 
-assign digital_conf.res = pmc_dc.reg_0.res;
-assign digital_conf.th = pmc_dc.reg_0.th;
+assign pm_digital_config.res = pmc_dc.reg_0.res;
+assign pm_digital_config.th = pmc_dc.reg_0.th;
 
 
 /**
@@ -70,12 +69,11 @@ always_ff @(posedge clk or negedge rst_n) begin
     else begin
         if (data_bus.we) begin
             case (requested_reg)
-                PMC_DC_REG_0:   pmc_dc.reg_0 <= data_bus.wdata;
+            PMC_DC_REG_0:   pmc_dc.reg_0 <= data_bus.wdata;
             endcase
         end
     end
 end
-
 
 /* Registers readout */
 
@@ -84,8 +82,8 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
     end
     else begin
-        case(requested_reg)
-            PMC_DC_REG_0:   data_bus.rdata <= pmc_dc.reg_0;
+        case (requested_reg)
+        PMC_DC_REG_0:   data_bus.rdata <= pmc_dc.reg_0;
         endcase
     end
 end

@@ -18,14 +18,10 @@
 import spi_pkg::*;
 
 module spi (
-    output logic ss,
-    output logic sck,
-    output logic mosi,
-    input logic  clk,
-    input logic  rst_n,
-    input logic  miso,
-
-    ibex_data_bus.slave data_bus
+    input logic         clk,
+    input logic         rst_n,
+    ibex_data_bus.slave data_bus,
+    soc_spi_bus.master  spi_bus
 );
 
 
@@ -61,9 +57,9 @@ spi_offset_decoder u_spi_offset_decoder (
 );
 
 spi_master u_spi_master (
-    .ss,
-    .sck,
-    .mosi,
+    .ss(spi_bus.ss),
+    .sck(spi_bus.sck),
+    .mosi(spi_bus.mosi),
     .busy,
     .rx_data_valid,
     .rx_data,
@@ -73,7 +69,7 @@ spi_master u_spi_master (
     .tx_data(spi.tdr.data),
     .clk_divider_valid,
     .clk_divider(spi.cdr.data),
-    .miso,
+    .miso(spi_bus.miso),
     .cpol(spi.cr.cpol),
     .cpha(spi.cr.cpha)
 );
@@ -101,20 +97,20 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         if (data_bus.we) begin
             case (requested_reg)
-                SPI_CR: begin
-                    spi.cr <= data_bus.wdata;
-                end
-                SPI_SR: begin
-                    spi.sr <= data_bus.wdata;
-                end
-                SPI_TDR: begin
-                    spi.tdr <= data_bus.wdata;
-                    tx_data_valid <= 1'b1;
-                end
-                SPI_CDR: begin
-                    spi.cdr <= data_bus.wdata;
-                    clk_divider_valid <= 1'b1;
-                end
+            SPI_CR: begin
+                spi.cr <= data_bus.wdata;
+            end
+            SPI_SR: begin
+                spi.sr <= data_bus.wdata;
+            end
+            SPI_TDR: begin
+                spi.tdr <= data_bus.wdata;
+                tx_data_valid <= 1'b1;
+            end
+            SPI_CDR: begin
+                spi.cdr <= data_bus.wdata;
+                clk_divider_valid <= 1'b1;
+            end
             endcase
         end
 
@@ -130,7 +126,6 @@ always_ff @(posedge clk or negedge rst_n) begin
     end
 end
 
-
 /* Registers readout */
 
 always_ff @(posedge clk or negedge rst_n) begin
@@ -138,12 +133,12 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
     end
     else begin
-        case(requested_reg)
-            SPI_CR:     data_bus.rdata <= spi.cr;
-            SPI_SR:     data_bus.rdata <= spi.sr;
-            SPI_TDR:    data_bus.rdata <= spi.tdr;
-            SPI_RDR:    data_bus.rdata <= spi.rdr;
-            SPI_CDR:    data_bus.rdata <= spi.cdr;
+        case (requested_reg)
+        SPI_CR:     data_bus.rdata <= spi.cr;
+        SPI_SR:     data_bus.rdata <= spi.sr;
+        SPI_TDR:    data_bus.rdata <= spi.tdr;
+        SPI_RDR:    data_bus.rdata <= spi.rdr;
+        SPI_CDR:    data_bus.rdata <= spi.cdr;
         endcase
     end
 end

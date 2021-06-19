@@ -16,9 +16,8 @@
  */
 
 module data_ram (
-    input logic clk,
-    input logic rst_n,
-
+    input logic         clk,
+    input logic         rst_n,
     ibex_data_bus.slave data_bus
 );
 
@@ -27,6 +26,7 @@ module data_ram (
  * Signals assignments
  */
 
+assign data_bus.gnt = data_bus.req;
 assign data_bus.err = 1'b0;
 
 
@@ -54,10 +54,6 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rvalid <= 1'b0;
     else
         data_bus.rvalid <= data_bus.gnt;
-end
-
-always_comb begin
-    data_bus.gnt = data_bus.req;
 end
 
 endmodule

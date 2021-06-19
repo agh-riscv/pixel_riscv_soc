@@ -18,12 +18,10 @@
 import uart_pkg::*;
 
 module uart (
-    output logic sout,
-    input logic  clk,
-    input logic  rst_n,
-    input logic  sin,
-
-    ibex_data_bus.slave data_bus
+    input logic         clk,
+    input logic         rst_n,
+    ibex_data_bus.slave data_bus,
+    soc_uart_bus.master uart_bus
 );
 
 
@@ -72,7 +70,7 @@ serial_clock_generator u_serial_clock_generator (
 
 uart_transmitter u_uart_transmitter (
     .busy(tx_busy),
-    .sout,
+    .sout(uart_bus.sout),
     .clk,
     .rst_n,
     .sck_rising_edge,
@@ -88,7 +86,7 @@ uart_receiver u_uart_receiver (
     .clk,
     .rst_n,
     .sck_rising_edge,
-    .sin
+    .sin(uart_bus.sin)
 );
 
 
@@ -114,20 +112,20 @@ always_ff @(posedge clk or negedge rst_n) begin
 
         if (data_bus.we) begin
             case (requested_reg)
-                UART_CR: begin
-                    uart.cr <= data_bus.wdata;
-                end
-                UART_SR: begin
-                    uart.sr <= data_bus.wdata;
-                end
-                UART_TDR: begin
-                    uart.tdr <= data_bus.wdata;
-                    tx_data_valid <= 1'b1;
-                end
-                UART_CDR: begin
-                    uart.cdr <= data_bus.wdata;
-                    clk_divider_valid <= 1'b1;
-                end
+            UART_CR: begin
+                uart.cr <= data_bus.wdata;
+            end
+            UART_SR: begin
+                uart.sr <= data_bus.wdata;
+            end
+            UART_TDR: begin
+                uart.tdr <= data_bus.wdata;
+                tx_data_valid <= 1'b1;
+            end
+            UART_CDR: begin
+                uart.cdr <= data_bus.wdata;
+                clk_divider_valid <= 1'b1;
+            end
             endcase
         end
 
@@ -146,7 +144,6 @@ always_ff @(posedge clk or negedge rst_n) begin
     end
 end
 
-
 /* Registers readout */
 
 always_ff @(posedge clk or negedge rst_n) begin
@@ -154,12 +151,12 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
     end
     else begin
-        case(requested_reg)
-            UART_CR:     data_bus.rdata <= uart.cr;
-            UART_SR:     data_bus.rdata <= uart.sr;
-            UART_TDR:    data_bus.rdata <= uart.tdr;
-            UART_RDR:    data_bus.rdata <= uart.rdr;
-            UART_CDR:    data_bus.rdata <= uart.cdr;
+        case (requested_reg)
+        UART_CR:    data_bus.rdata <= uart.cr;
+        UART_SR:    data_bus.rdata <= uart.sr;
+        UART_TDR:   data_bus.rdata <= uart.tdr;
+        UART_RDR:   data_bus.rdata <= uart.rdr;
+        UART_CDR:   data_bus.rdata <= uart.cdr;
         endcase
     end
 end

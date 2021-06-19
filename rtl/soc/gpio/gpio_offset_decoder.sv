@@ -44,17 +44,16 @@ always_comb begin
 
     if (req) begin
         case (addr[11:0])
-            `GPIO_CR_OFFSET:    requested_reg = GPIO_CR;
-            `GPIO_SR_OFFSET:    requested_reg = GPIO_SR;
-            `GPIO_ODR_OFFSET:   requested_reg = GPIO_ODR;
-            `GPIO_IDR_OFFSET:   requested_reg = GPIO_IDR;
-            `GPIO_IER_OFFSET:   requested_reg = GPIO_IER;
-            `GPIO_ISR_OFFSET:   requested_reg = GPIO_ISR;
-            `GPIO_RIER_OFFSET:  requested_reg = GPIO_RIER;
-            `GPIO_FIER_OFFSET:  requested_reg = GPIO_FIER;
+        `GPIO_CR_OFFSET:    requested_reg = GPIO_CR;
+        `GPIO_SR_OFFSET:    requested_reg = GPIO_SR;
+        `GPIO_ODR_OFFSET:   requested_reg = GPIO_ODR;
+        `GPIO_IDR_OFFSET:   requested_reg = GPIO_IDR;
+        `GPIO_IER_OFFSET:   requested_reg = GPIO_IER;
+        `GPIO_ISR_OFFSET:   requested_reg = GPIO_ISR;
+        `GPIO_RIER_OFFSET:  requested_reg = GPIO_RIER;
+        `GPIO_FIER_OFFSET:  requested_reg = GPIO_FIER;
         endcase
     end
-
     gnt = requested_reg != GPIO_NONE;
 end
 

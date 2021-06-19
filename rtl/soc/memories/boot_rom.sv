@@ -16,9 +16,8 @@
  */
 
 module boot_rom (
-    input logic clk,
-    input logic rst_n,
-
+    input logic          clk,
+    input logic          rst_n,
     ibex_data_bus.slave  data_bus,
     ibex_instr_bus.slave instr_bus
 );
@@ -57,14 +56,12 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rvalid <= 1'b0;
         data_bus.rdata <= 32'b0;
-
         instr_bus.rvalid <= 1'b0;
         instr_bus.rdata <= 32'b0;
     end
     else begin
         data_bus.rvalid <= data_bus.gnt;
         data_bus.rdata <= rdata;
-
         instr_bus.rvalid <= instr_bus.gnt;
         instr_bus.rdata <= rdata;
     end

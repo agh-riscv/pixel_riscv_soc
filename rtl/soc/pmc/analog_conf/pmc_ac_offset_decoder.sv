@@ -44,13 +44,12 @@ always_comb begin
 
     if (req) begin
         case (addr[7:0])
-            `PMC_AC_REG_0_OFFSET:   requested_reg = PMC_AC_REG_0;
-            `PMC_AC_REG_1_OFFSET:   requested_reg = PMC_AC_REG_1;
-            `PMC_AC_REG_2_OFFSET:   requested_reg = PMC_AC_REG_2;
-            `PMC_AC_REG_3_OFFSET:   requested_reg = PMC_AC_REG_3;
+        `PMC_AC_REG_0_OFFSET:   requested_reg = PMC_AC_REG_0;
+        `PMC_AC_REG_1_OFFSET:   requested_reg = PMC_AC_REG_1;
+        `PMC_AC_REG_2_OFFSET:   requested_reg = PMC_AC_REG_2;
+        `PMC_AC_REG_3_OFFSET:   requested_reg = PMC_AC_REG_3;
         endcase
     end
-
     gnt = requested_reg != PMC_AC_NONE;
 end
 

@@ -60,21 +60,33 @@ SECTIONS
         _endtext = .;
     }  > code_ram
 
+    .init_array :
+    {
+        . = ALIGN(4);
+        _init_array_start = .;
+        KEEP (*(.init_array*))
+        . = ALIGN(4);
+        _init_array_end = .;
+    } > code_ram
+
     .rodata : {
         . = ALIGN(4);
         *(.rodata);
         *(.rodata.*)
+        . = ALIGN(4);
     } > code_ram
 
      _sidata = LOADADDR(.data);
 
     .data : {
+        . = ALIGN(4);
         sdata  =  .;
         _sdata  =  .;
         *(.data);
         *(.data.*)
         *(.sdata);
         *(.sdata.*)
+        . = ALIGN(4);
         edata  =  .;
         _edata  =  .;
     } > ram AT > code_ram
@@ -83,6 +95,7 @@ SECTIONS
     {
         . = ALIGN(4);
         *(.shbss)
+        . = ALIGN(4);
     } > ram
 
     .bss :
@@ -94,6 +107,7 @@ SECTIONS
         *(.sbss)
         *(.sbss.*)
         *(COMMON)
+        . = ALIGN(4);
         _bss_end = .;
     } > ram
 

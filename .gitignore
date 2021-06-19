@@ -1,2 +1,8 @@
-*.log
 .vscode
+fpga/.Xil
+fpga/build
+fpga/vivado*
+rtl/misc/spi_flash_memory/spi_mem.sv
+rtl/soc/memories/boot_mem.sv
+sw/build
+tools/__pycache__

@@ -51,14 +51,13 @@ typedef enum logic [1:0] {
  * Local variables and signals
  */
 
+state_t     state, state_nxt;
 logic       ss_nxt, sck_nxt, mosi_nxt, rx_data_valid_nxt;
 logic [3:0] bits_counter, bits_counter_nxt;
 logic [7:0] tx_buffer, tx_buffer_nxt;
 logic [7:0] rx_data_nxt, rx_buffer, rx_buffer_nxt;
 logic       sck_generator_en, sck_generator_en_nxt, leading_edge, trailing_edge;
 logic       sck_polarity, sck_phase, sck_polarity_nxt, sck_phase_nxt;
-
-state_t state, state_nxt;
 
 
 /**
@@ -99,34 +98,33 @@ always_comb begin
     bits_counter_nxt = bits_counter;
 
     case (state)
-        IDLE: begin
-            if (tx_data_valid)
-                state_nxt = START;
+    IDLE: begin
+        if (tx_data_valid)
+            state_nxt = START;
+    end
+    START: begin
+        state_nxt = ACTIVE;
+    end
+    ACTIVE: begin
+        if (leading_edge) begin
+            bits_counter_nxt = bits_counter + 1;
         end
-        START: begin
-            state_nxt = ACTIVE;
-        end
-        ACTIVE: begin
-            if (leading_edge) begin
-                bits_counter_nxt = bits_counter + 1;
+        else if (trailing_edge) begin
+            if (bits_counter == 8) begin
+                state_nxt = STOP;
+                bits_counter_nxt = 4'b0;
             end
-            else if (trailing_edge) begin
-                if (bits_counter == 8) begin
-                    state_nxt = STOP;
-                    bits_counter_nxt = 4'b0;
-                end
-            end
         end
-        STOP: begin
-            if (leading_edge)
-                state_nxt = IDLE;
-        end
-        default: begin
+    end
+    STOP: begin
+        if (leading_edge)
             state_nxt = IDLE;
-        end
+    end
+    default: begin
+        state_nxt = IDLE;
+    end
     endcase
 end
-
 
 /* Transmission controller */
 
@@ -171,63 +169,63 @@ always_comb begin
     sck_phase_nxt = sck_phase;
 
     case (state)
-        IDLE: begin
-            busy = 1'b0;
-            sck_nxt = cpol;
-            sck_polarity_nxt = cpol;
-            sck_phase_nxt = cpha;
+    IDLE: begin
+        busy = 1'b0;
+        sck_nxt = cpol;
+        sck_polarity_nxt = cpol;
+        sck_phase_nxt = cpha;
+    end
+    START: begin
+        ss_nxt = 1'b0;
+        sck_generator_en_nxt = 1'b1;
+        rx_buffer_nxt = 8'b0;
+        tx_buffer_nxt = tx_data;
+
+        if (~sck_phase) begin
+            mosi_nxt = tx_data[7];
+            tx_buffer_nxt = {tx_data[6:0], 1'b0};
         end
-        START: begin
-            ss_nxt = 1'b0;
-            sck_generator_en_nxt = 1'b1;
-            rx_buffer_nxt = 8'b0;
-            tx_buffer_nxt = tx_data;
+    end
+    ACTIVE: begin
+        if (leading_edge) begin
+            sck_nxt = ~sck_polarity;
 
             if (~sck_phase) begin
-                mosi_nxt = tx_data[7];
-                tx_buffer_nxt = {tx_data[6:0], 1'b0};
+                rx_buffer_nxt = {rx_buffer[6:0], miso};
+            end
+            else begin
+                mosi_nxt = tx_buffer[7];
+                tx_buffer_nxt = {tx_buffer[6:0], 1'b0};
             end
         end
-        ACTIVE: begin
-            if (leading_edge) begin
-                sck_nxt = ~sck_polarity;
+        else if (trailing_edge) begin
+            sck_nxt = sck_polarity;
 
-                if (~sck_phase) begin
-                    rx_buffer_nxt = {rx_buffer[6:0], miso};
-                end
-                else begin
-                    mosi_nxt = tx_buffer[7];
-                    tx_buffer_nxt = {tx_buffer[6:0], 1'b0};
-                end
+            if (~sck_phase) begin
+                mosi_nxt = tx_buffer[7];
+                tx_buffer_nxt = {tx_buffer[6:0], 1'b0};
             end
-            else if (trailing_edge) begin
-                sck_nxt = sck_polarity;
+            else begin
+                rx_buffer_nxt = {rx_buffer[6:0], miso};
+            end
 
-                if (~sck_phase) begin
-                    mosi_nxt = tx_buffer[7];
-                    tx_buffer_nxt = {tx_buffer[6:0], 1'b0};
-                end
-                else begin
-                    rx_buffer_nxt = {rx_buffer[6:0], miso};
-                end
+            if (bits_counter == 8) begin
+                rx_data_valid_nxt = 1'b1;
 
-                if (bits_counter == 8) begin
-                    rx_data_valid_nxt = 1'b1;
-
-                    if (sck_phase)
-                        rx_data_nxt = {rx_buffer[6:0], miso};
-                    else
-                        rx_data_nxt = rx_buffer;
-                end
+                if (sck_phase)
+                    rx_data_nxt = {rx_buffer[6:0], miso};
+                else
+                    rx_data_nxt = rx_buffer;
             end
         end
-        STOP: begin
-            if (leading_edge) begin
-                ss_nxt = 1'b1;
-                sck_generator_en_nxt = 1'b0;
-            end
+    end
+    STOP: begin
+        if (leading_edge) begin
+            ss_nxt = 1'b1;
+            sck_generator_en_nxt = 1'b0;
         end
-        default: ;
+    end
+    default: ;
     endcase
 end
 

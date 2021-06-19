@@ -50,31 +50,31 @@ always_comb begin
     waitt = 1'b0;
 
     case (instr[7:5]) inside
-        `STORE: begin
-            instr_size = 2'b10;
-            store = 1'b1;
-        end
-        `STOREB: begin
-            instr_size = 2'b10;
-            store = 1'b1;
-            branch = 1'b1;
-        end
-        `LOOP: begin
-            instr_size = 2'b01;
-            loop = 1'b1;
-        end
-        `JUMP: begin
-            instr_size = 2'b01;
-            jump = 1'b1;
-        end
-        `WAITT: begin
-            instr_size = 2'b00;
-            waitt = 1'b1;
-        end
-        default: begin
-            instr_size = 2'b00;
-            waitt = 1'b1;
-        end
+    `STORE: begin
+        instr_size = 2'b10;
+        store = 1'b1;
+    end
+    `STOREB: begin
+        instr_size = 2'b10;
+        store = 1'b1;
+        branch = 1'b1;
+    end
+    `LOOP: begin
+        instr_size = 2'b01;
+        loop = 1'b1;
+    end
+    `JUMP: begin
+        instr_size = 2'b01;
+        jump = 1'b1;
+    end
+    `WAITT: begin
+        instr_size = 2'b00;
+        waitt = 1'b1;
+    end
+    default: begin
+        instr_size = 2'b00;
+        waitt = 1'b1;
+    end
     endcase
 end
 

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import rxd_pkg::*;
+import pixel_riscv_soc_pkg::*;
 
 module instr_bus_arbiter (
     output instr_bus_state_t instr_bus_state,
@@ -42,8 +42,8 @@ always_comb begin
 
     if (instr_bus_req) begin
         case (instr_bus_addr) inside
-            `BOOT_ROM_ADDRESS_SPACE:    instr_bus_state.requested_slave = INSTR_BUS_BOOT_ROM;
-            `CODE_RAM_ADDRESS_SPACE:    instr_bus_state.requested_slave = INSTR_BUS_CODE_RAM;
+        `BOOT_ROM_ADDRESS_SPACE:    instr_bus_state.requested_slave = INSTR_BUS_BOOT_ROM;
+        `CODE_RAM_ADDRESS_SPACE:    instr_bus_state.requested_slave = INSTR_BUS_CODE_RAM;
         endcase
     end
 end

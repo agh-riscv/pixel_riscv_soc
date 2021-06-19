@@ -15,60 +15,35 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import ibex_pkg::*;
-
 module pixel_riscv_soc (
-    output logic [31:0] gpio_out,
-    output logic        ss,
-    output logic        sck,
-    output logic        mosi,
-    output logic        sout,
-    output logic [63:0] pm_din,
-    input logic         clk,
-    input logic         rst_n,
-    input logic [31:0]  gpio_in,
-    input logic         miso,
-    input logic         sin,
-    input logic [63:0]  pm_dout,
+    input logic                  clk,
+    input logic                  rst_n,
 
-    pmc_ctrl.master         ctrl,
-    pmc_analog_conf.master  analog_conf,
-    pmc_digital_conf.master digital_conf
+    soc_gpio_bus.master          gpio_bus,
+    soc_spi_bus.master           spi_bus,
+    soc_uart_bus.master          uart_bus,
+
+    soc_pm_ctrl.master           pm_ctrl,
+    soc_pm_data.master           pm_data,
+    soc_pm_analog_config.master  pm_analog_config,
+    soc_pm_digital_config.master pm_digital_config
 );
-
-
-/**
- * Local parameters
- */
-
-parameter logic [31:0] BOOT_ROM_ADDRESS = 32'h0000_0000;
 
 
 /**
  * Local variables and signals
  */
 
-ibex_instr_bus instr_bus();
-ibex_data_bus  data_bus();
-
-logic [14:0] irq_fast;
-logic        tmr_irq, gpio_irq;
-
-
-/**
- * Signals assignments
- */
-
-assign irq_fast[14:2] = 13'b0;
-assign irq_fast[1] = tmr_irq;
-assign irq_fast[0] = gpio_irq;
+ibex_instr_bus instr_bus ();
+ibex_data_bus  data_bus ();
+soc_timer_bus  timer_bus ();
 
 
 /**
  * Submodules placement
  */
 
-ibex_core #(
+ibex_top #(
     .PMPEnable(1'b0),
     .PMPGranularity(0),
     .PMPNumRegions(4),
@@ -84,16 +59,19 @@ ibex_core #(
     .ICacheECC(1'b0),
     .BranchPredictor(1'b0),
     .DbgTriggerEn(1'b0),
+    .DbgHwBreakNum(1),
     .SecureIbex(1'b0),
     .DmHaltAddr(32'h00000000),
     .DmExceptionAddr(32'h00000000)
-) u_core (
+) u_ibex_top (
     .clk_i(clk),
     .rst_ni(rst_n),
+
     .test_en_i(1'b0),
+    .ram_cfg_i(10'b0),
 
     .hart_id_i(32'b0),
-    .boot_addr_i(BOOT_ROM_ADDRESS),
+    .boot_addr_i(32'h0000_0000),
 
     .instr_req_o(instr_bus.req),
     .instr_gnt_i(instr_bus.gnt),
@@ -115,38 +93,36 @@ ibex_core #(
     .irq_software_i(1'b0),
     .irq_timer_i(1'b0),
     .irq_external_i(1'b0),
-    .irq_fast_i(irq_fast),
+    .irq_fast_i({13'b0, timer_bus.irq, gpio_bus.irq}),
     .irq_nm_i(1'b0),
 
     .debug_req_i(1'b0),
+    .crash_dump_o(),
 
     .fetch_enable_i(1'b1),
     .alert_minor_o(),
     .alert_major_o(),
-    .core_sleep_o()
+    .core_sleep_o(),
+
+    .scan_rst_ni(1'b1)
 );
 
 peripherals u_peripherals (
-    .tmr_irq,
-    .gpio_irq,
-    .gpio_out,
-    .ss,
-    .sck,
-    .mosi,
-    .sout,
-    .pm_din,
     .clk,
     .rst_n,
-    .gpio_in,
-    .miso,
-    .sin,
-    .pm_dout,
 
     .instr_bus,
     .data_bus,
-    .ctrl,
-    .analog_conf,
-    .digital_conf
+
+    .gpio_bus,
+    .spi_bus,
+    .timer_bus,
+    .uart_bus,
+
+    .pm_ctrl,
+    .pm_data,
+    .pm_analog_config,
+    .pm_digital_config
 );
 
 endmodule

@@ -44,14 +44,13 @@ always_comb begin
 
     if (req) begin
         case (addr[11:0])
-            `UART_CR_OFFSET:    requested_reg = UART_CR;
-            `UART_SR_OFFSET:    requested_reg = UART_SR;
-            `UART_TDR_OFFSET:   requested_reg = UART_TDR;
-            `UART_RDR_OFFSET:   requested_reg = UART_RDR;
-            `UART_CDR_OFFSET:   requested_reg = UART_CDR;
+        `UART_CR_OFFSET:    requested_reg = UART_CR;
+        `UART_SR_OFFSET:    requested_reg = UART_SR;
+        `UART_TDR_OFFSET:   requested_reg = UART_TDR;
+        `UART_RDR_OFFSET:   requested_reg = UART_RDR;
+        `UART_CDR_OFFSET:   requested_reg = UART_CDR;
         endcase
     end
-
     gnt = requested_reg != UART_NONE;
 end
 

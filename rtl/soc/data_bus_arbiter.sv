@@ -15,7 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import rxd_pkg::*;
+import pixel_riscv_soc_pkg::*;
 
 module data_bus_arbiter (
     output data_bus_state_t data_bus_state,
@@ -42,14 +42,14 @@ always_comb begin
 
     if (data_bus_req) begin
         case (data_bus_addr) inside
-            `BOOT_ROM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_BOOT_ROM;
-            `CODE_RAM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_CODE_RAM;
-            `DATA_RAM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_DATA_RAM;
-            `GPIO_ADDRESS_SPACE:        data_bus_state.requested_slave = DATA_BUS_GPIO;
-            `SPI_ADDRESS_SPACE:         data_bus_state.requested_slave = DATA_BUS_SPI;
-            `UART_ADDRESS_SPACE:        data_bus_state.requested_slave = DATA_BUS_UART;
-            `TMR_ADDRESS_SPACE:         data_bus_state.requested_slave = DATA_BUS_TMR;
-            `PMC_ADDRESS_SPACE:         data_bus_state.requested_slave = DATA_BUS_PMC;
+        `BOOT_ROM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_BOOT_ROM;
+        `CODE_RAM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_CODE_RAM;
+        `DATA_RAM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_DATA_RAM;
+        `GPIO_ADDRESS_SPACE:        data_bus_state.requested_slave = DATA_BUS_GPIO;
+        `SPI_ADDRESS_SPACE:         data_bus_state.requested_slave = DATA_BUS_SPI;
+        `UART_ADDRESS_SPACE:        data_bus_state.requested_slave = DATA_BUS_UART;
+        `TIMER_ADDRESS_SPACE:       data_bus_state.requested_slave = DATA_BUS_TIMER;
+        `PMC_ADDRESS_SPACE:         data_bus_state.requested_slave = DATA_BUS_PMC;
         endcase
     end
 end

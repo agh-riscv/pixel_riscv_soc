@@ -42,12 +42,11 @@ typedef enum logic [1:0] {
  * Local variables and signals
  */
 
+state_t     state, state_nxt;
 logic       sout_nxt;
 logic [2:0] bits_counter, bits_counter_nxt;
 logic [3:0] edges_counter, edges_counter_nxt;
 logic [7:0] tx_buffer, tx_buffer_nxt;
-
-state_t state, state_nxt;
 
 
 /**
@@ -75,54 +74,53 @@ always_comb begin
     edges_counter_nxt = edges_counter;
 
     case (state)
-        IDLE: begin
-            if (tx_data_valid)
-                state_nxt = START;
-        end
-        START: begin
-            if (sck_rising_edge) begin
-                if (edges_counter == 15) begin
-                    state_nxt = ACTIVE;
-                    edges_counter_nxt = 4'b0;
-                end
-                else begin
-                    edges_counter_nxt = edges_counter + 1;
-                end
+    IDLE: begin
+        if (tx_data_valid)
+            state_nxt = START;
+    end
+    START: begin
+        if (sck_rising_edge) begin
+            if (edges_counter == 15) begin
+                state_nxt = ACTIVE;
+                edges_counter_nxt = 4'b0;
+            end
+            else begin
+                edges_counter_nxt = edges_counter + 1;
             end
         end
-        ACTIVE: begin
-            if (sck_rising_edge) begin
-                if (edges_counter == 15) begin
-                    edges_counter_nxt = 4'b0;
+    end
+    ACTIVE: begin
+        if (sck_rising_edge) begin
+            if (edges_counter == 15) begin
+                edges_counter_nxt = 4'b0;
 
-                    if (bits_counter == 7) begin
-                        state_nxt = STOP;
-                        bits_counter_nxt = 3'b0;
-                    end
-                    else begin
-                        bits_counter_nxt = bits_counter + 1;
-                    end
+                if (bits_counter == 7) begin
+                    state_nxt = STOP;
+                    bits_counter_nxt = 3'b0;
                 end
                 else begin
-                    edges_counter_nxt = edges_counter + 1;
+                    bits_counter_nxt = bits_counter + 1;
                 end
             end
-        end
-        STOP: begin
-            if (sck_rising_edge) begin
-                if (edges_counter == 15) begin
-                    state_nxt = IDLE;
-                    edges_counter_nxt = 4'b0;
-                end
-                else begin
-                    edges_counter_nxt = edges_counter + 1;
-                end
+            else begin
+                edges_counter_nxt = edges_counter + 1;
             end
         end
-        default: ;
+    end
+    STOP: begin
+        if (sck_rising_edge) begin
+            if (edges_counter == 15) begin
+                state_nxt = IDLE;
+                edges_counter_nxt = 4'b0;
+            end
+            else begin
+                edges_counter_nxt = edges_counter + 1;
+            end
+        end
+    end
+    default: ;
     endcase
 end
-
 
 /* Transmission controller */
 
@@ -143,31 +141,31 @@ always_comb begin
     tx_buffer_nxt = tx_buffer;
 
     case (state)
-        IDLE: begin
-            busy = 1'b0;
-        end
-        START: begin
-            sout_nxt = 1'b0;
-            tx_buffer_nxt = tx_data;
+    IDLE: begin
+        busy = 1'b0;
+    end
+    START: begin
+        sout_nxt = 1'b0;
+        tx_buffer_nxt = tx_data;
 
-            if (sck_rising_edge && edges_counter == 15) begin
+        if (sck_rising_edge && edges_counter == 15) begin
+            sout_nxt = tx_buffer[0];
+            tx_buffer_nxt = tx_buffer>>1;
+        end
+    end
+    ACTIVE: begin
+        if (sck_rising_edge && edges_counter == 15) begin
+            if (bits_counter == 7) begin
+                sout_nxt = 1'b1;
+            end
+            else begin
                 sout_nxt = tx_buffer[0];
                 tx_buffer_nxt = tx_buffer>>1;
             end
         end
-        ACTIVE: begin
-            if (sck_rising_edge && edges_counter == 15) begin
-                if (bits_counter == 7) begin
-                    sout_nxt = 1'b1;
-                end
-                else begin
-                    sout_nxt = tx_buffer[0];
-                    tx_buffer_nxt = tx_buffer>>1;
-                end
-            end
-        end
-        STOP: ;
-        default: ;
+    end
+    STOP: ;
+    default: ;
     endcase
 end
 

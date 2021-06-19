@@ -16,9 +16,8 @@
  */
 
 module code_ram (
-    input logic clk,
-    input logic rst_n,
-
+    input logic          clk,
+    input logic          rst_n,
     ibex_data_bus.slave  data_bus,
     ibex_instr_bus.slave instr_bus
 );
@@ -39,7 +38,6 @@ logic [3:0]  be;
 
 assign data_bus.err = 1'b0;
 assign data_bus.rdata = rdata;
-
 assign instr_bus.err = 1'b0;
 assign instr_bus.rdata = rdata;
 

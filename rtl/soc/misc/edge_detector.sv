@@ -28,7 +28,7 @@ module edge_detector (
  * Local variables and signals
  */
 
-logic data_in_prv, data_in_prv_2, edge_detected_nxt, edge_type_nxt;
+logic data_in_prv, data_in_prv2, data_in_prv3;
 
 
 /**
@@ -37,28 +37,20 @@ logic data_in_prv, data_in_prv_2, edge_detected_nxt, edge_type_nxt;
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        edge_detected <= 1'b0;
-        edge_type <= 1'b0;
-        data_in_prv_2 <= 1'b0;
         data_in_prv <= 1'b0;
+        data_in_prv2 <= 1'b0;
+        data_in_prv3 <= 1'b0;
     end
     else begin
-        edge_detected <= edge_detected_nxt;
-        edge_type <= edge_type_nxt;
-        data_in_prv_2 <= data_in_prv;
         data_in_prv <= data_in;
+        data_in_prv2 <= data_in_prv;
+        data_in_prv3 <= data_in_prv2;
     end
 end
 
 always_comb begin
-    if (data_in_prv != data_in_prv_2) begin
-        edge_detected_nxt = 1'b1;
-        edge_type_nxt = data_in_prv;
-    end
-    else begin
-        edge_detected_nxt = 1'b0;
-        edge_type_nxt = 1'b0;
-    end
+    edge_detected = data_in_prv2 ^ data_in_prv3;
+    edge_type = data_in_prv2;
 end
 
 endmodule

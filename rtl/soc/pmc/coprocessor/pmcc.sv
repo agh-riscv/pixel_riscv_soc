@@ -23,8 +23,7 @@ module pmcc (
     input logic         pmcc_rst_n,
     input logic         trigger,
     input logic [31:0]  instr,
-
-    pmc_ctrl.master ctrl
+    soc_pm_ctrl.master  pm_ctrl
 );
 
 
@@ -57,7 +56,7 @@ pmcc_matrix_controller u_pmcc_matrix_controller (
     .pmcc_rst_n,
     .store,
     .instr,
-    .ctrl
+    .pm_ctrl
 );
 
 pmcc_loop_controller u_pmcc_loop_controller (
@@ -93,11 +92,11 @@ end
 
 always_comb begin
     case ({rst_n & pmcc_rst_n, waiting, jump, branch_exec}) inside
-        4'b0???: pc_if = 10'b0;
-        4'b11??: pc_if = pc_id;
-        4'b101?: pc_if = {instr[5:0], instr[15:8]};
-        4'b1001: pc_if = branch_dst;
-        4'b1000: pc_if = pc_id + instr_size + 1;
+    4'b0???:    pc_if = 10'b0;
+    4'b11??:    pc_if = pc_id;
+    4'b101?:    pc_if = {instr[5:0], instr[15:8]};
+    4'b1001:    pc_if = branch_dst;
+    4'b1000:    pc_if = pc_id + instr_size + 1;
     endcase
 end
 

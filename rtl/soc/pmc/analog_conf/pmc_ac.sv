@@ -18,11 +18,10 @@
 import pmc_ac_pkg::*;
 
 module pmc_ac (
-    input logic clk,
-    input logic rst_n,
-
-    ibex_data_bus.slave    data_bus,
-    pmc_analog_conf.master analog_conf
+    input logic                 clk,
+    input logic                 rst_n,
+    ibex_data_bus.slave         data_bus,
+    soc_pm_analog_config.master pm_analog_config
 );
 
 
@@ -38,10 +37,10 @@ pmc_ac_reg_t requested_reg;
  * Signals assignments
  */
 
-assign analog_conf.res[127:96] = pmc_ac.reg_3.res;
-assign analog_conf.res[95:64] = pmc_ac.reg_2.res;
-assign analog_conf.res[63:32] = pmc_ac.reg_1.res;
-assign analog_conf.res[31:0] = pmc_ac.reg_0.res;
+assign pm_analog_config.res[127:96] = pmc_ac.reg_3.res;
+assign pm_analog_config.res[95:64] = pmc_ac.reg_2.res;
+assign pm_analog_config.res[63:32] = pmc_ac.reg_1.res;
+assign pm_analog_config.res[31:0] = pmc_ac.reg_0.res;
 
 
 /**
@@ -75,10 +74,10 @@ always_ff @(posedge clk or negedge rst_n) begin
     else begin
         if (data_bus.we) begin
             case (requested_reg)
-                PMC_AC_REG_0:   pmc_ac.reg_0 <= data_bus.wdata;
-                PMC_AC_REG_1:   pmc_ac.reg_1 <= data_bus.wdata;
-                PMC_AC_REG_2:   pmc_ac.reg_2 <= data_bus.wdata;
-                PMC_AC_REG_3:   pmc_ac.reg_3 <= data_bus.wdata;
+            PMC_AC_REG_0:   pmc_ac.reg_0 <= data_bus.wdata;
+            PMC_AC_REG_1:   pmc_ac.reg_1 <= data_bus.wdata;
+            PMC_AC_REG_2:   pmc_ac.reg_2 <= data_bus.wdata;
+            PMC_AC_REG_3:   pmc_ac.reg_3 <= data_bus.wdata;
             endcase
         end
     end
@@ -92,11 +91,11 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
     end
     else begin
-        case(requested_reg)
-            PMC_AC_REG_0:   data_bus.rdata <= pmc_ac.reg_0;
-            PMC_AC_REG_1:   data_bus.rdata <= pmc_ac.reg_1;
-            PMC_AC_REG_2:   data_bus.rdata <= pmc_ac.reg_2;
-            PMC_AC_REG_3:   data_bus.rdata <= pmc_ac.reg_3;
+        case (requested_reg)
+        PMC_AC_REG_0:   data_bus.rdata <= pmc_ac.reg_0;
+        PMC_AC_REG_1:   data_bus.rdata <= pmc_ac.reg_1;
+        PMC_AC_REG_2:   data_bus.rdata <= pmc_ac.reg_2;
+        PMC_AC_REG_3:   data_bus.rdata <= pmc_ac.reg_3;
         endcase
     end
 end

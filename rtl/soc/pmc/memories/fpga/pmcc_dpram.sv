@@ -55,13 +55,11 @@ always_ff @(posedge clk) begin
             if (be_a[0])
                 mem[addr_a[ADDR_MSB:0]] <= wdata_a[7:0];
         end
-
         rdata_a[31:24] <= mem[addr_a[ADDR_MSB:0] + 3];
         rdata_a[23:16] <= mem[addr_a[ADDR_MSB:0] + 2];
         rdata_a[15:8] <= mem[addr_a[ADDR_MSB:0] + 1];
         rdata_a[7:0] <= mem[addr_a[ADDR_MSB:0]];
     end
-
     rdata_b[31:24] <= mem[addr_b[ADDR_MSB:0] + 3];
     rdata_b[23:16] <= mem[addr_b[ADDR_MSB:0] + 2];
     rdata_b[15:8] <= mem[addr_b[ADDR_MSB:0] + 1];

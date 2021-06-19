@@ -21,8 +21,7 @@ module pmcc_matrix_controller (
     input logic        pmcc_rst_n,
     input logic        store,
     input logic [31:0] instr,
-
-    pmc_ctrl.master ctrl
+    soc_pm_ctrl.master pm_ctrl
 );
 
 
@@ -37,13 +36,13 @@ logic [15:0] matrix_ctrl;
  * Signals assignments
  */
 
-assign ctrl.res = matrix_ctrl[15:6];
-assign ctrl.write_cfg = matrix_ctrl[5];
-assign ctrl.strobe = matrix_ctrl[4];
-assign ctrl.gate = matrix_ctrl[3];
-assign ctrl.shB = matrix_ctrl[2];
-assign ctrl.shA = matrix_ctrl[1];
-assign ctrl.clkSh = matrix_ctrl[0];
+assign pm_ctrl.res = matrix_ctrl[15:6];
+assign pm_ctrl.write_cfg = matrix_ctrl[5];
+assign pm_ctrl.strobe = matrix_ctrl[4];
+assign pm_ctrl.gate = matrix_ctrl[3];
+assign pm_ctrl.shB = matrix_ctrl[2];
+assign pm_ctrl.shA = matrix_ctrl[1];
+assign pm_ctrl.clkSh = matrix_ctrl[0];
 
 
 /**

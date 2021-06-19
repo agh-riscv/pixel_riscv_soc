@@ -34,31 +34,36 @@ module top_pixel_riscv_soc_arty_a7_100 (
  * Local variables and signals
  */
 
-logic        clk, rst_n;
-logic [31:0] gpio_out, gpio_in;
-logic        ss, sck, mosi, miso;
-logic [63:0] pm_din, pm_dout;
+logic                 clk, rst_n;
 
-pmc_ctrl         ctrl();
-pmc_analog_conf  analog_conf();
-pmc_digital_conf digital_conf();
+soc_gpio_bus          gpio_bus ();
+soc_spi_bus           spi_bus ();
+soc_uart_bus          uart_bus ();
+
+soc_pm_ctrl           pm_ctrl ();
+soc_pm_data           pm_data ();
+soc_pm_analog_config  pm_analog_config ();
+soc_pm_digital_config pm_digital_config ();
 
 
 /**
  * Signals assignments
  */
 
-assign led[3] = gpio_out[15];       /* bootloader finished */
-assign led3_g = gpio_out[3];
-assign led2_g = gpio_out[2];
-assign led1_g = gpio_out[1];
-assign led0_g = gpio_out[0];
+assign led[3] = gpio_bus.dout[15];       /* bootloader finished */
+assign led3_g = gpio_bus.dout[3];
+assign led2_g = gpio_bus.dout[2];
+assign led1_g = gpio_bus.dout[1];
+assign led0_g = gpio_bus.dout[0];
 
-assign gpio_in[17] = 1'b0;          /* codeload skipping */
-assign gpio_in[16] = sw;            /* codeload source */
-assign gpio_in[3:0] = btn[3:0];
+assign gpio_bus.din[17] = 1'b0;          /* codeload skipping */
+assign gpio_bus.din[16] = sw;            /* codeload source */
+assign gpio_bus.din[3:0] = btn[3:0];
 
 assign led[2:0] = 3'b0;
+
+assign sout = uart_bus.sout;
+assign uart_bus.sin = sin;
 
 
 /**
@@ -66,30 +71,24 @@ assign led[2:0] = 3'b0;
  */
 
 pixel_riscv_soc u_pixel_riscv_soc (
-    .gpio_out,
-    .ss,
-    .sck,
-    .mosi,
-    .sout,
-    .pm_dout,
     .clk,
     .rst_n,
-    .gpio_in,
-    .miso,
-    .sin,
-    .pm_din,
-    .ctrl,
-    .analog_conf,
-    .digital_conf
+    .gpio_bus,
+    .spi_bus,
+    .uart_bus,
+    .pm_ctrl,
+    .pm_data,
+    .pm_analog_config,
+    .pm_digital_config
 );
 
 spi_flash_memory u_spi_flash_memory (
-    .miso,
+    .miso(spi_bus.miso),
     .clk,
     .rst_n,
-    .ss,
-    .sck,
-    .mosi
+    .ss(spi_bus.ss),
+    .sck(spi_bus.sck),
+    .mosi(spi_bus.mosi)
 );
 
 clkgen_xil7series u_clkgen_xil7series (
