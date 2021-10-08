@@ -1,9 +1,9 @@
 #include "command_interpreter.h"
-#include "uart.h"
+#include "ui.h"
 
 int main()
 {
-    uart.write("application started\n");
+    ui << "command_interpreter started\n";
     Command_interpreter command_interpreter;
     command_interpreter.run();
 }

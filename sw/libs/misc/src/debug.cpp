@@ -1,6 +1,6 @@
 #include "debug.h"
 #include "string_ops.h"
-#include "uart.h"
+#include "ui.h"
 
 void Debugger::print_dec_word(const uint32_t word)
 {
@@ -48,30 +48,30 @@ void Debugger::print_hex_word(const char *name, const uint32_t address, const ui
 
 void Debugger::print(const char *value)
 {
-    char buffer[100];
-    strcpy(buffer, value);
-    strcat(buffer, "\n");
-    uart.write(buffer);
+    char buf[100];
+    strcpy(buf, value);
+    strcat(buf, "\n");
+    ui << buf;
 }
 
 void Debugger::print(const char *name, const char *value)
 {
-    char buffer[100];
-    strcpy(buffer, name);
-    strcat(buffer, ": ");
-    strcat(buffer, value);
-    strcat(buffer, "\n");
-    uart.write(buffer);
+    char buf[100];
+    strcpy(buf, name);
+    strcat(buf, ": ");
+    strcat(buf, value);
+    strcat(buf, "\n");
+    ui << buf;
 }
 
 void Debugger::print(const char *name, const char *address, const char *value)
 {
-    char buffer[100];
-    strcpy(buffer, name);
-    strcat(buffer, " (");
-    strcat(buffer, address);
-    strcat(buffer, "): ");
-    strcat(buffer, value);
-    strcat(buffer, "\n");
-    uart.write(buffer);
+    char buf[100];
+    strcpy(buf, name);
+    strcat(buf, " (");
+    strcat(buf, address);
+    strcat(buf, "): ");
+    strcat(buf, value);
+    strcat(buf, "\n");
+    ui << buf;
 }

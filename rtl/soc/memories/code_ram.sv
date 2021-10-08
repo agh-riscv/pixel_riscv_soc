@@ -36,10 +36,13 @@ logic [3:0]  be;
  * Signals assignments
  */
 
-assign data_bus.err = 1'b0;
 assign data_bus.rdata = rdata;
-assign instr_bus.err = 1'b0;
+assign data_bus.rdata_intg = 7'b0;
+assign data_bus.err = 1'b0;
+
 assign instr_bus.rdata = rdata;
+assign instr_bus.rdata_intg = 7'b0;
+assign instr_bus.err = 1'b0;
 
 
 /**

@@ -9,6 +9,7 @@ static constexpr uint8_t ier_offset{0x10};
 static constexpr uint8_t isr_offset{0x14};
 static constexpr uint8_t rier_offset{0x18};
 static constexpr uint8_t fier_offset{0x1C};
+static constexpr uint8_t oenr_offset{0x20};
 
 static constexpr uint8_t codeload_skipping_pin{17};
 static constexpr uint8_t codeload_source_pin{16};
@@ -24,8 +25,22 @@ Gpio::Gpio(const uint32_t base_address)
         ier{reinterpret_cast<volatile uint32_t *>(base_address + ier_offset)},
         isr{reinterpret_cast<volatile uint32_t *>(base_address + isr_offset)},
         rier{reinterpret_cast<volatile uint32_t *>(base_address + rier_offset)},
-        fier{reinterpret_cast<volatile uint32_t *>(base_address + fier_offset)}
+        fier{reinterpret_cast<volatile uint32_t *>(base_address + fier_offset)},
+        oenr{reinterpret_cast<volatile uint32_t *>(base_address + oenr_offset)}
 { }
+
+void Gpio::set_pin_direction(const uint8_t pin, const Direction direction) const volatile
+{
+    uint32_t reg = *oenr;
+    reg &= ~(1<<pin);
+    reg |= (static_cast<uint32_t>(direction) & 0x01)<<pin;
+    *oenr = reg;
+}
+
+Gpio::Direction Gpio::get_pin_direction(const uint8_t pin) const volatile
+{
+    return (*oenr & 1<<pin) ? Direction::in : Direction::out;
+}
 
 void Gpio::set_pin(const uint8_t pin, const bool value) const volatile
 {
@@ -62,5 +77,6 @@ bool Gpio::get_codeload_source_pin() const volatile
 
 void Gpio::set_bootloader_finished_pin(const bool value) const volatile
 {
+    set_pin_direction(bootloader_finished_pin, Direction::out);
     set_pin(bootloader_finished_pin, value);
 }

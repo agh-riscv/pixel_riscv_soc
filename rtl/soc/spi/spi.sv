@@ -29,8 +29,7 @@ module spi (
  * Local variables and signals
  */
 
-spi_t       spi;
-spi_reg_t   requested_reg;
+spi_regs_t  spi_regs, spi_regs_nxt;
 logic [7:0] rx_data;
 logic       busy, tx_data_valid, rx_data_valid, clk_divider_valid;
 
@@ -39,22 +38,13 @@ logic       busy, tx_data_valid, rx_data_valid, clk_divider_valid;
  * Signals assignments
  */
 
+assign data_bus.rdata_intg = 7'b0;
 assign data_bus.err = 1'b0;
 
 
 /**
  * Submodules placement
  */
-
-spi_offset_decoder u_spi_offset_decoder (
-    .gnt(data_bus.gnt),
-    .rvalid(data_bus.rvalid),
-    .requested_reg,
-    .clk,
-    .rst_n,
-    .req(data_bus.req),
-    .addr(data_bus.addr)
-);
 
 spi_master u_spi_master (
     .ss(spi_bus.ss),
@@ -66,64 +56,90 @@ spi_master u_spi_master (
     .clk,
     .rst_n,
     .tx_data_valid,
-    .tx_data(spi.tdr.data),
+    .tx_data(spi_regs.tdr.data),
     .clk_divider_valid,
-    .clk_divider(spi.cdr.data),
+    .clk_divider(spi_regs.cdr.data),
     .miso(spi_bus.miso),
-    .cpol(spi.cr.cpol),
-    .cpha(spi.cr.cpha)
+    .cpol(spi_regs.cr.cpol),
+    .cpha(spi_regs.cr.cpha)
 );
+
+
+/**
+ * Tasks and functions definitions
+ */
+
+function automatic logic is_offset_valid(logic [11:0] offset);
+    return offset inside {
+        `SPI_CR_OFFSET, `SPI_SR_OFFSET, `SPI_TDR_OFFSET, `SPI_RDR_OFFSET, `SPI_CDR_OFFSET
+    };
+endfunction
+
+function automatic logic is_reg_written(logic [11:0] offset);
+    return data_bus.req && data_bus.we && data_bus.addr[11:0] == offset;
+endfunction
+
+function automatic logic is_reg_read(logic [11:0] offset);
+    return data_bus.req && data_bus.addr[11:0] == offset;
+endfunction
 
 
 /**
  * Module internal logic
  */
 
+/* Bus gnt and rvalid signals setting  */
+
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+        data_bus.rvalid <= 1'b0;
+    else
+        data_bus.rvalid <= data_bus.gnt;
+end
+
+always_comb begin
+    data_bus.gnt = is_offset_valid(data_bus.addr[11:0]);
+end
+
 /* Registers update */
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        spi.cr <= 32'b0;
-        spi.sr <= 32'b0;
-        spi.tdr <= 32'b0;
-        spi.rdr <= 32'b0;
-        spi.cdr <= 32'b0;
+        spi_regs <= {{5{32'b0}}};
         tx_data_valid <= 1'b0;
         clk_divider_valid <= 1'b0;
     end
     else begin
-        tx_data_valid <= 1'b0;
-        clk_divider_valid <= 1'b0;
-
-        if (data_bus.we) begin
-            case (requested_reg)
-            SPI_CR: begin
-                spi.cr <= data_bus.wdata;
-            end
-            SPI_SR: begin
-                spi.sr <= data_bus.wdata;
-            end
-            SPI_TDR: begin
-                spi.tdr <= data_bus.wdata;
-                tx_data_valid <= 1'b1;
-            end
-            SPI_CDR: begin
-                spi.cdr <= data_bus.wdata;
-                clk_divider_valid <= 1'b1;
-            end
-            endcase
-        end
-
-        if (spi.sr.rxne && requested_reg == SPI_RDR)
-            spi.sr.rxne <= 1'b0;
-
-        if (rx_data_valid) begin
-            spi.rdr.data <= rx_data;
-            spi.sr.rxne <= 1'b1;
-        end
-
-        spi.sr.txact <= busy;
+        spi_regs <= spi_regs_nxt;
+        tx_data_valid <= is_reg_written(`SPI_TDR_OFFSET);
+        clk_divider_valid <= is_reg_written(`SPI_CDR_OFFSET);
     end
+end
+
+always_comb begin
+    spi_regs_nxt = spi_regs;
+
+    if (data_bus.req && data_bus.we) begin
+        case (data_bus.addr[11:0])
+        `SPI_CR_OFFSET:     spi_regs_nxt.cr = data_bus.wdata;
+        `SPI_SR_OFFSET:     spi_regs_nxt.sr = data_bus.wdata;
+        `SPI_TDR_OFFSET:    spi_regs_nxt.tdr = data_bus.wdata;
+        `SPI_RDR_OFFSET:    spi_regs_nxt.rdr = data_bus.wdata;
+        `SPI_CDR_OFFSET:    spi_regs_nxt.cdr = data_bus.wdata;
+        endcase
+    end
+
+    /* 0x04: status reg */
+    spi_regs_nxt.sr.txact = busy;
+
+    if (rx_data_valid)
+        spi_regs_nxt.sr.rxne = 1'b1;
+    else if (is_reg_read(`SPI_RDR_OFFSET))
+        spi_regs_nxt.sr.rxne = 1'b0;
+
+    /* 0x00c: receiver data reg */
+    if (rx_data_valid)
+        spi_regs_nxt.rdr.data = rx_data;
 end
 
 /* Registers readout */
@@ -133,13 +149,15 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
     end
     else begin
-        case (requested_reg)
-        SPI_CR:     data_bus.rdata <= spi.cr;
-        SPI_SR:     data_bus.rdata <= spi.sr;
-        SPI_TDR:    data_bus.rdata <= spi.tdr;
-        SPI_RDR:    data_bus.rdata <= spi.rdr;
-        SPI_CDR:    data_bus.rdata <= spi.cdr;
-        endcase
+        if (data_bus.req) begin
+            case (data_bus.addr[11:0])
+            `SPI_CR_OFFSET:     data_bus.rdata <= spi_regs.cr;
+            `SPI_SR_OFFSET:     data_bus.rdata <= spi_regs.sr;
+            `SPI_TDR_OFFSET:    data_bus.rdata <= spi_regs.tdr;
+            `SPI_RDR_OFFSET:    data_bus.rdata <= spi_regs.rdr;
+            `SPI_CDR_OFFSET:    data_bus.rdata <= spi_regs.cdr;
+            endcase
+        end
     end
 end
 

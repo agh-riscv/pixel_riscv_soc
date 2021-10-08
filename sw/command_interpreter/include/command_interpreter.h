@@ -15,9 +15,14 @@ public:
 private:
     Command_parser command_parser;
 
-    Command read_command() const;
     void help() const;
-    void set_led() const;
+    void reset() const;
+    void ping() const;
+    int set_gpio_direction(const Command &command) const;
+    int get_gpio_direction(const Command &command) const;
+    int set_gpio(const Command &command) const;
+    int get_gpio(const Command &command) const;
+    int set_heartbeat(const Command &command) const;
     void read_matrix() const;
     void calibrate_matrix() const;
 };

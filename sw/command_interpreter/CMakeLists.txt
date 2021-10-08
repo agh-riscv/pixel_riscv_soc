@@ -13,16 +13,17 @@ target_link_libraries(${app} PRIVATE
 )
 
 target_link_options(${app} PRIVATE
-    -T ${CMAKE_CURRENT_SOURCE_DIR}/link.ld
+    -T ${CMAKE_CURRENT_SOURCE_DIR}/../common/link.ld
 )
 
-target_include_directories(${app} PRIVATE
+target_include_directories(${app} PUBLIC
     include
 )
 
 target_sources(${app} PRIVATE
-    crt0.S
-    src/code_loader.cpp
+    ../common/crt0.S
+    src/command_interpreter.cpp
+    src/command_parser.cpp
     src/main.cpp
 )
 

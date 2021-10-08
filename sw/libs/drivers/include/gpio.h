@@ -4,6 +4,8 @@
 
 class Gpio final {
 public:
+    enum class Direction {out, in};
+
     Gpio(const uint32_t base_address);
     Gpio(const Gpio &) = delete;
     Gpio(Gpio &&) = delete;
@@ -15,6 +17,9 @@ public:
     uint32_t get_isr() const volatile { return *isr; };
     void set_rier(const uint32_t rier) const volatile { *this->rier = rier; };
     void set_fier(const uint32_t fier) const volatile { *this->fier = fier; };
+
+    void set_pin_direction(const uint8_t pin, const Direction direction) const volatile;
+    Direction get_pin_direction(const uint8_t pin) const volatile;
 
     void set_pin(const uint8_t pin, const bool value) const volatile;
     bool get_pin(const uint8_t pin) const volatile;
@@ -34,6 +39,7 @@ private:
     volatile uint32_t * const isr;
     volatile uint32_t * const rier;
     volatile uint32_t * const fier;
+    volatile uint32_t * const oenr;
 };
 
 extern Gpio gpio;

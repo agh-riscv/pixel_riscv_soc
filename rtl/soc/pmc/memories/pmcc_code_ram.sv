@@ -29,6 +29,7 @@ module pmcc_code_ram (
  */
 
 assign data_bus.gnt = data_bus.req;
+assign data_bus.rdata_intg = 7'b0;
 assign data_bus.err = 1'b0;
 
 

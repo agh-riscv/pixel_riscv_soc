@@ -22,23 +22,15 @@ package timer_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define TIMER_CR_OFFSET   12'h000
-`define TIMER_SR_OFFSET   12'h004
-`define TIMER_CNTR_OFFSET 12'h008
-`define TIMER_CMPR_OFFSET 12'h00C
+`define TIMER_CR_OFFSET     12'h000     /* Control Reg offset */
+`define TIMER_SR_OFFSET     12'h004     /* Status Reg offset */
+`define TIMER_CNTR_OFFSET   12'h008     /* Counter Value Reg offset */
+`define TIMER_CMPR_OFFSET   12'h00c     /* Compare Value Reg offset */
 
 
 /**
  * User defined types
  */
-
-typedef enum logic [2:0] {
-    TIMER_CR,         /* Control Register */
-    TIMER_SR,         /* Status Register */
-    TIMER_CNTR,       /* Counter Value Register */
-    TIMER_CMPR,       /* Compare Value Register */
-    TIMER_NONE
-} timer_reg_t;
 
 typedef struct packed {
     logic [28:0] res;
@@ -66,6 +58,6 @@ typedef struct packed {
     timer_sr_t   sr;
     timer_cntr_t cntr;
     timer_cmpr_t cmpr;
-} timer_t;
+} timer_regs_t;
 
 endpackage

@@ -177,8 +177,9 @@ end
 
 always_comb begin
     instr_bus.rvalid = 1'b0;
-    instr_bus.err = 1'b0;
     instr_bus.rdata = 32'b0;
+    instr_bus.rdata_intg = 7'b0;
+    instr_bus.err = 1'b0;
 
     case (instr_bus_state.responding_slave)
     INSTR_BUS_BOOT_ROM: `instr_bus_set_outputs(boot_rom_instr_bus)
@@ -213,8 +214,9 @@ end
 
 always_comb begin
     data_bus.rvalid = 1'b0;
-    data_bus.err = 1'b0;
     data_bus.rdata = 32'b0;
+    data_bus.rdata_intg = 7'b0;
+    data_bus.err = 1'b0;
 
     case (data_bus_state.responding_slave)
     DATA_BUS_BOOT_ROM:  `data_bus_set_outputs(boot_rom_data_bus)

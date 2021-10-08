@@ -22,25 +22,16 @@ package spi_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define SPI_CR_OFFSET  12'h000
-`define SPI_SR_OFFSET  12'h004
-`define SPI_TDR_OFFSET 12'h008
-`define SPI_RDR_OFFSET 12'h00C
-`define SPI_CDR_OFFSET 12'h010
+`define SPI_CR_OFFSET   12'h000     /* Control Reg offset */
+`define SPI_SR_OFFSET   12'h004     /* Status Reg offset*/
+`define SPI_TDR_OFFSET  12'h008     /* Transmitter Data Reg offset */
+`define SPI_RDR_OFFSET  12'h00c     /* Receiver Data Reg offset */
+`define SPI_CDR_OFFSET  12'h010     /* Clock Divider Reg offset*/
 
 
 /**
  * User defined types
  */
-
-typedef enum logic [2:0] {
-    SPI_CR,         /* Control Register */
-    SPI_SR,         /* Status Register */
-    SPI_TDR,        /* Transmitter Data Register */
-    SPI_RDR,        /* Receiver Data Register */
-    SPI_CDR,        /* Clock Divider Register */
-    SPI_NONE
-} spi_reg_t;
 
 typedef struct packed {
     logic [29:0] res;
@@ -70,11 +61,11 @@ typedef struct packed {
 } spi_cdr_t;
 
 typedef struct packed {
-    spi_cr_t cr;
-    spi_sr_t sr;
+    spi_cr_t  cr;
+    spi_sr_t  sr;
     spi_tdr_t tdr;
     spi_rdr_t rdr;
     spi_cdr_t cdr;
-} spi_t;
+} spi_regs_t;
 
 endpackage

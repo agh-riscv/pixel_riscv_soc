@@ -78,6 +78,7 @@ ibex_top #(
     .instr_rvalid_i(instr_bus.rvalid),
     .instr_addr_o(instr_bus.addr),
     .instr_rdata_i(instr_bus.rdata),
+    .instr_rdata_intg_i(instr_bus.rdata_intg),
     .instr_err_i(instr_bus.err),
 
     .data_req_o(data_bus.req),
@@ -87,7 +88,9 @@ ibex_top #(
     .data_be_o(data_bus.be),
     .data_addr_o(data_bus.addr),
     .data_wdata_o(data_bus.wdata),
+    .data_wdata_intg_o(data_bus.wdata_intg),
     .data_rdata_i(data_bus.rdata),
+    .data_rdata_intg_i(data_bus.rdata_intg),
     .data_err_i(data_bus.err),
 
     .irq_software_i(1'b0),

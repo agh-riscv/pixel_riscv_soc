@@ -1,6 +1,6 @@
 #include "code_loader.h"
 #include "gpio.h"
-#include "uart.h"
+#include "ui.h"
 
 static inline void update_trap_vector_base_address(void)
 {
@@ -17,27 +17,25 @@ static inline void jump_to_loaded_software(void)
 
 int main()
 {
-    uart.write("bootloader started\n");
+    ui << "bootloader started\n";
 
     if (gpio.get_codeload_skipping_pin()) {
-        uart.write("codeload skipped\n");
-    }
-    else {
+        ui << "codeload skipped\n";
+    } else {
         Code_loader::Source codeload_source;
         if (gpio.get_codeload_source_pin()) {
             codeload_source = Code_loader::Source::uart;
-            uart.write("codeload source: uart\n");
-        }
-        else {
+            ui << "codeload source: uart\n";
+        } else {
             codeload_source = Code_loader::Source::spi;
-            uart.write("codeload source: spi\n");
+            ui << "codeload source: spi\n";
         }
         Code_loader::load_code(codeload_source);
-        uart.write("codeload finished\n");
+        ui << "codeload finished\n";
     }
     update_trap_vector_base_address();
 
-    uart.write("bootloader finished\n");
+    ui << "bootloader finished\n";
     gpio.set_bootloader_finished_pin(true);
     jump_to_loaded_software();
 }

@@ -35,9 +35,14 @@ void Core::execute_10_cycles_loop(const uint32_t iterations) const
     );
 }
 
-void Core::enable_interrupts_globally() const
+void Core::enable_interrupts() const
 {
     asm volatile ("csrrsi t0, mstatus, 1<<3");
+}
+
+void Core::disable_interrupts() const
+{
+    asm volatile ("csrrci t0, mstatus, 1<<3");
 }
 
 void Core::enable_gpio_interrupts(void (*handler)())
@@ -49,12 +54,30 @@ void Core::enable_gpio_interrupts(void (*handler)())
     );
 }
 
+void Core::disable_gpio_interrupts()
+{
+    gpio_interrupts_handler = nullptr;
+    asm volatile (
+        "li    t0, 1<<16    \n"
+        "csrrc t0, mie,  t0 \n"
+    );
+}
+
 void Core::enable_timer_interrupts(void (*handler)())
 {
     timer_interrupts_handler = handler;
     asm volatile (
         "li    t0, 1<<17    \n"
         "csrrs t0, mie,  t0 \n"
+    );
+}
+
+void Core::disable_timer_interrupts()
+{
+    timer_interrupts_handler = nullptr;
+    asm volatile (
+        "li    t0, 1<<17    \n"
+        "csrrc t0, mie,  t0 \n"
     );
 }
 

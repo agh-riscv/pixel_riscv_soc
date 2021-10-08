@@ -15,5 +15,9 @@ void to_hex_string(char *dest, uint32_t word, const uint8_t bytes_number);
 void to_hex_string(char *dest, const uint8_t byte);
 void to_hex_string(char *dest, const uint32_t word);
 
+void to_string(char *dest, const int val);
+
 bool is_number(const char *str);
 int to_int(const char *str);
+
+bool isalnum(const char ch);

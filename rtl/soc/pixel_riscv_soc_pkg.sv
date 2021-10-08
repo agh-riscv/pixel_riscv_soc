@@ -39,16 +39,18 @@ package pixel_riscv_soc_pkg;
 /* Data bus */
 
 `define data_bus_assign_inputs(bus) \
-    assign bus.addr = data_bus.addr; \
     assign bus.we = data_bus.we; \
     assign bus.be = data_bus.be; \
-    assign bus.wdata = data_bus.wdata;
+    assign bus.addr = data_bus.addr; \
+    assign bus.wdata = data_bus.wdata; \
+    assign bus.wdata_intg = data_bus.wdata_intg;
 
 `define data_bus_set_outputs(bus) \
     begin \
         data_bus.rvalid = bus.rvalid; \
-        data_bus.err = bus.err; \
         data_bus.rdata = bus.rdata; \
+        data_bus.rdata_intg = bus.rdata_intg; \
+        data_bus.err = bus.err; \
     end
 
 `define data_bus_set_gnt_and_req(bus) \
@@ -65,8 +67,9 @@ package pixel_riscv_soc_pkg;
 `define instr_bus_set_outputs(bus) \
     begin \
         instr_bus.rvalid = bus.rvalid; \
-        instr_bus.err = bus.err; \
         instr_bus.rdata = bus.rdata; \
+        instr_bus.rdata_intg = bus.rdata_intg; \
+        instr_bus.err = bus.err; \
     end
 
 `define instr_bus_set_gnt_and_req(bus) \

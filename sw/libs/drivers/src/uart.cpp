@@ -18,8 +18,8 @@ Uart::Uart(const uint32_t base_address)
 {
 #ifdef SIM
     cdr->div = 2;
-#elif defined ASIC || defined FPGA
-    cdr->div = 6;  /* when frequency is equal to 50 MHz */
+#else
+    cdr->div = 12;  /* 115200, when frequency is equal to 50 MHz */
 #endif
     cr->en = 1;
 }
@@ -37,6 +37,11 @@ int Uart::read(char *dest, const uint8_t len) const volatile
         if (dest[i] == '\n') {
             dest[i] = '\0';
             return 0;
+        } else if (dest[i] == '\b') {
+            if (i)
+                i -= 2;
+            else
+                i -= 1;
         }
     }
     return 1;
@@ -50,9 +55,8 @@ void Uart::write(const uint8_t byte) const volatile
 
 void Uart::write(const char *src) const volatile
 {
-    do {
-        write(*src);
-    } while (*src++);
+    while (*src)
+        write(*src++);
 }
 
 bool Uart::is_receiver_ready() const volatile

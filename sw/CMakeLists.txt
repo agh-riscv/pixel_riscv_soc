@@ -9,7 +9,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
-set(target "sim" CACHE STRING "Compilation target [asic/fpga/sim]")
+set(app "command_interpreter" CACHE STRING "")
+set(target "sim" CACHE STRING "")
 
 project(riscv_xray_detector VERSION 1.0.0 LANGUAGES CXX ASM)
 
@@ -30,14 +31,24 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -Werror \
 ")
 
-if (${target} STREQUAL "asic")
+if (${target} STREQUAL "arty")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARTY")
+elseif (${target} STREQUAL "asic")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DASIC")
-elseif (${target} STREQUAL "fpga")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFPGA")
-else()
+elseif (${target} STREQUAL "basys")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBASYS")
+elseif (${target} STREQUAL "sim")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIM")
+else()
+    message(SEND_ERROR "Incorrect target: ${target}")
+    return()
 endif()
 
-add_subdirectory(app)
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/${app}")
+    message(SEND_ERROR "Incorrect application: ${app}")
+    return()
+endif()
+
+add_subdirectory(${app})
 add_subdirectory(bootloader)
 add_subdirectory(libs)

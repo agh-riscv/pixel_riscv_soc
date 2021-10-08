@@ -18,6 +18,7 @@
 interface ibex_instr_bus;
 
 logic [31:0] addr, rdata;
+logic [6:0]  rdata_intg;
 logic        req, gnt, rvalid, err;
 
 modport master (
@@ -25,15 +26,17 @@ modport master (
     output addr,
     input  gnt,
     input  rvalid,
-    input  err,
-    input  rdata
+    input  rdata,
+    input  rdata_intg,
+    input  err
 );
 
 modport slave (
     output gnt,
     output rvalid,
-    output err,
     output rdata,
+    output rdata_intg,
+    output err,
     input  req,
     input  addr
 );

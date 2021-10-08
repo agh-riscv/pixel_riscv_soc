@@ -13,7 +13,8 @@ public:
 
     void set_cmpr(const uint32_t cmpr) const volatile { *this->cmpr = cmpr; };
 
-    void trigger() const volatile;
+    void enable() const volatile;
+    void disable() const volatile;
     void clear_matched() const volatile;
 
 private:

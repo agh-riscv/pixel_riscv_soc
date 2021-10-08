@@ -18,31 +18,36 @@
 interface ibex_data_bus;
 
 logic [31:0] addr, wdata, rdata;
+logic [6:0]  wdata_intg, rdata_intg;
 logic [3:0]  be;
 logic        req, we, gnt, rvalid, err;
 
 modport master (
     output req,
-    output addr,
     output we,
     output be,
+    output addr,
     output wdata,
+    output wdata_intg,
     input  gnt,
     input  rvalid,
-    input  err,
-    input  rdata
+    input  rdata,
+    input  rdata_intg,
+    input  err
 );
 
 modport slave (
     output gnt,
     output rvalid,
-    output err,
     output rdata,
+    output rdata_intg,
+    output err,
     input  req,
-    input  addr,
     input  we,
     input  be,
-    input  wdata
+    input  addr,
+    input  wdata,
+    input  wdata_intg
 );
 
 endinterface

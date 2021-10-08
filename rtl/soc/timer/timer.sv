@@ -29,8 +29,7 @@ module timer (
  * Local variables and signals
  */
 
-timer_t      timer;
-timer_reg_t  requested_reg;
+timer_regs_t timer_regs, timer_regs_nxt;
 logic [31:0] counter;
 logic        active, match_occurred;
 
@@ -39,23 +38,16 @@ logic        active, match_occurred;
  * Signals assignments
  */
 
+assign data_bus.rdata_intg = 7'b0;
 assign data_bus.err = 1'b0;
-assign timer_bus.irq = timer.sr.mtch;
+
+/* 0x004: status reg */
+assign timer_bus.irq = timer_regs.sr.mtch;
 
 
 /**
  * Submodules placement
  */
-
-timer_offset_decoder u_timer_offset_decoder (
-    .gnt(data_bus.gnt),
-    .rvalid(data_bus.rvalid),
-    .requested_reg,
-    .clk,
-    .rst_n,
-    .req(data_bus.req),
-    .addr(data_bus.addr)
-);
 
 timer_core u_timer_core (
     .active,
@@ -63,49 +55,74 @@ timer_core u_timer_core (
     .counter,
     .clk,
     .rst_n,
-    .trigger(timer.cr.trg),
-    .halt(timer.cr.hlt),
-    .single_shot(timer.cr.sngl),
-    .compare_value(timer.cmpr)
+    .trigger(timer_regs.cr.trg),
+    .halt(timer_regs.cr.hlt),
+    .single_shot(timer_regs.cr.sngl),
+    .compare_value(timer_regs.cmpr)
 );
+
+
+/**
+ * Tasks and functions definitions
+ */
+
+function automatic logic is_offset_valid(logic [11:0] offset);
+    return offset inside {
+        `TIMER_CR_OFFSET, `TIMER_SR_OFFSET, `TIMER_CNTR_OFFSET, `TIMER_CMPR_OFFSET
+    };
+endfunction
 
 
 /**
  * Module internal logic
  */
 
+/* Bus gnt and rvalid signals setting  */
+
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+        data_bus.rvalid <= 1'b0;
+    else
+        data_bus.rvalid <= data_bus.gnt;
+end
+
+always_comb begin
+    data_bus.gnt = is_offset_valid(data_bus.addr[11:0]);
+end
+
 /* Registers update */
 
 always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        timer.cr <= 32'b0;
-        timer.sr <= 32'b0;
-        timer.cntr <= 32'b0;
-        timer.cmpr <= 32'b0;
+    if (!rst_n)
+        timer_regs <= {{4{32'b0}}};
+    else
+        timer_regs <= timer_regs_nxt;
+end
+
+always_comb begin
+    timer_regs_nxt = timer_regs;
+
+    if (data_bus.req && data_bus.we) begin
+        case (data_bus.addr[11:0])
+        `TIMER_CR_OFFSET:   timer_regs_nxt.cr = data_bus.wdata;
+        `TIMER_SR_OFFSET:   timer_regs_nxt.sr = data_bus.wdata;
+        `TIMER_CNTR_OFFSET: timer_regs_nxt.cntr = data_bus.wdata;
+        `TIMER_CMPR_OFFSET: timer_regs_nxt.cmpr = data_bus.wdata;
+        endcase
     end
-    else begin
-        timer.cntr <= counter;
 
-        if (data_bus.we) begin
-            case (requested_reg)
-            TIMER_CR:   timer.cr <= data_bus.wdata;
-            TIMER_SR:   timer.sr <= data_bus.wdata;
-            TIMER_CNTR: timer.cntr <= data_bus.wdata;
-            TIMER_CMPR: timer.cmpr <= data_bus.wdata;
-            endcase
-        end
+    /* 0x000: control reg */
+    if (timer_regs.cr.hlt)
+        timer_regs_nxt.cr.hlt = 1'b0;
 
-        if (timer.cr.trg)
-            timer.cr.trg <= 1'b0;
+    if (timer_regs.cr.trg)
+        timer_regs_nxt.cr.trg = 1'b0;
 
-        if (timer.cr.hlt)
-            timer.cr.hlt <= 1'b0;
+    /* 0x004: status reg */
+    timer_regs_nxt.sr.act = active;
 
-        if (match_occurred)
-            timer.sr.mtch <= 1'b1;
-
-        timer.sr.act <= active;
-    end
+    if (match_occurred)
+        timer_regs_nxt.sr.mtch = 1'b1;
 end
 
 /* Registers readout */
@@ -115,12 +132,14 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
     end
     else begin
-        case (requested_reg)
-        TIMER_CR:   data_bus.rdata <= timer.cr;
-        TIMER_SR:   data_bus.rdata <= timer.sr;
-        TIMER_CNTR: data_bus.rdata <= timer.cntr;
-        TIMER_CMPR: data_bus.rdata <= timer.cmpr;
-        endcase
+        if (data_bus.req) begin
+            case (data_bus.addr[11:0])
+            `TIMER_CR_OFFSET:   data_bus.rdata <= timer_regs.cr;
+            `TIMER_SR_OFFSET:   data_bus.rdata <= timer_regs.sr;
+            `TIMER_CNTR_OFFSET: data_bus.rdata <= timer_regs.cntr;
+            `TIMER_CMPR_OFFSET: data_bus.rdata <= timer_regs.cmpr;
+            endcase
+        end
     end
 end
 

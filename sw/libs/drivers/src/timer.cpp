@@ -15,9 +15,14 @@ Timer::Timer(const uint32_t base_address)
         cmpr{reinterpret_cast<volatile uint32_t *>(base_address + cmpr_offset)}
 { }
 
-void Timer::trigger() const volatile
+void Timer::enable() const volatile
 {
     cr->trg = true;
+}
+
+void Timer::disable() const volatile
+{
+    cr->trg = false;
 }
 
 void Timer::clear_matched() const volatile

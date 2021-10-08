@@ -22,10 +22,9 @@ module top_pixel_riscv_soc_arty_a7_100 (
     output logic       led2_g,
     output logic       led1_g,
     output logic       led0_g,
-    input logic        io_clk,
-    input logic        io_rst_n,
+    input logic        clk_io,
+    input logic        rst_n_io,
     input logic        sw,
-    input logic [3:0]  btn,
     input logic        sin
 );
 
@@ -50,15 +49,18 @@ soc_pm_digital_config pm_digital_config ();
  * Signals assignments
  */
 
-assign led[3] = gpio_bus.dout[15];       /* bootloader finished */
-assign led3_g = gpio_bus.dout[3];
-assign led2_g = gpio_bus.dout[2];
-assign led1_g = gpio_bus.dout[1];
-assign led0_g = gpio_bus.dout[0];
+assign led[3] = !gpio_bus.oe_n[15] ? gpio_bus.dout[15] : 1'b0;  /* bootloader finished */
+assign led3_g = !gpio_bus.oe_n[3] ? gpio_bus.dout[3] : 1'b0;
+assign led2_g = !gpio_bus.oe_n[2] ? gpio_bus.dout[2] : 1'b0;
+assign led1_g = !gpio_bus.oe_n[1] ? gpio_bus.dout[1] : 1'b0;
+assign led0_g = !gpio_bus.oe_n[0] ? gpio_bus.dout[0] : 1'b0;
 
-assign gpio_bus.din[17] = 1'b0;          /* codeload skipping */
-assign gpio_bus.din[16] = sw;            /* codeload source */
-assign gpio_bus.din[3:0] = btn[3:0];
+assign gpio_bus.din[17] = 1'b0;                                 /* codeload skipping */
+assign gpio_bus.din[16] = sw;                                   /* codeload source */
+assign gpio_bus.din[3] = led3_g;
+assign gpio_bus.din[2] = led2_g;
+assign gpio_bus.din[1] = led1_g;
+assign gpio_bus.din[0] = led0_g;
 
 assign led[2:0] = 3'b0;
 
@@ -92,8 +94,8 @@ spi_flash_memory u_spi_flash_memory (
 );
 
 clkgen_xil7series u_clkgen_xil7series (
-    .IO_CLK(io_clk),
-    .IO_RST_N(io_rst_n),
+    .IO_CLK(clk_io),
+    .IO_RST_N(rst_n_io),
     .clk_sys(clk),
     .rst_sys_n(rst_n)
 );

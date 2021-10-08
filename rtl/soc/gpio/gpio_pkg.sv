@@ -22,31 +22,20 @@ package gpio_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define GPIO_CR_OFFSET   12'h000
-`define GPIO_SR_OFFSET   12'h004
-`define GPIO_ODR_OFFSET  12'h008
-`define GPIO_IDR_OFFSET  12'h00C
-`define GPIO_IER_OFFSET  12'h010
-`define GPIO_ISR_OFFSET  12'h014
-`define GPIO_RIER_OFFSET 12'h018
-`define GPIO_FIER_OFFSET 12'h01C
+`define GPIO_CR_OFFSET      12'h000     /* Control Reg offset */
+`define GPIO_SR_OFFSET      12'h004     /* Status Reg offset */
+`define GPIO_ODR_OFFSET     12'h008     /* Output Data Reg offset */
+`define GPIO_IDR_OFFSET     12'h00c     /* Input Data Reg offset */
+`define GPIO_IER_OFFSET     12'h010     /* Interrupt Enable Reg offset */
+`define GPIO_ISR_OFFSET     12'h014     /* Interrupt Status Reg offset */
+`define GPIO_RIER_OFFSET    12'h018     /* Rising-edge Interrupt Enable Reg offset */
+`define GPIO_FIER_OFFSET    12'h01c     /* Falling-edge Interrupt Enable Reg offset */
+`define GPIO_OENR_OFFSET    12'h020     /* Output Enable Reg offset */
 
 
 /**
  * User defined types
  */
-
-typedef enum logic [3:0] {
-    GPIO_CR,        /* Control Register */
-    GPIO_SR,        /* Status Register */
-    GPIO_ODR,       /* Output Data Register */
-    GPIO_IDR,       /* Input Data Register */
-    GPIO_IER,       /* Interrupt Enable Register */
-    GPIO_ISR,       /* Interrupt Status Register */
-    GPIO_RIER,      /* Rising-edge Interrupt Enable Register */
-    GPIO_FIER,      /* Falling-edge Interrupt Enable Register */
-    GPIO_NONE
-} gpio_reg_t;
 
 typedef struct packed {
     logic [31:0] res;
@@ -81,14 +70,19 @@ typedef struct packed {
 } gpio_fier_t;
 
 typedef struct packed {
-    gpio_cr_t cr;
-    gpio_sr_t sr;
-    gpio_odr_t odr;
-    gpio_idr_t idr;
-    gpio_ier_t ier;
-    gpio_isr_t isr;
+    logic [31:0] data;
+} gpio_oenr_t;
+
+typedef struct packed {
+    gpio_cr_t   cr;
+    gpio_sr_t   sr;
+    gpio_odr_t  odr;
+    gpio_idr_t  idr;
+    gpio_ier_t  ier;
+    gpio_isr_t  isr;
     gpio_rier_t rier;
     gpio_fier_t fier;
-} gpio_t;
+    gpio_oenr_t oenr;
+} gpio_regs_t;
 
 endpackage

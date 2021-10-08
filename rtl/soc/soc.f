@@ -30,7 +30,6 @@ peripherals.sv
 
 gpio/gpio_pkg.sv
 gpio/gpio_interrupt_detector.sv
-gpio/gpio_offset_decoder.sv
 gpio/gpio.sv
 
 interfaces/ibex_data_bus.sv
@@ -50,14 +49,6 @@ memories/boot_rom.sv
 memories/code_ram.sv
 memories/data_ram.sv
 
-pmc/analog_conf/pmc_ac_pkg.sv
-pmc/analog_conf/pmc_ac_offset_decoder.sv
-pmc/analog_conf/pmc_ac.sv
-
-pmc/digital_conf/pmc_dc_pkg.sv
-pmc/digital_conf/pmc_dc_offset_decoder.sv
-pmc/digital_conf/pmc_dc.sv
-
 pmc/coprocessor/pmcc_pkg.sv
 pmc/coprocessor/pmcc_instr_decoder.sv
 pmc/coprocessor/pmcc_loop_controller.sv
@@ -70,23 +61,19 @@ pmc/memories/fpga/pmcc_dpram.sv
 pmc/memories/pmcc_code_ram.sv
 
 pmc/pmc_pkg.sv
-pmc/pmc_offset_decoder.sv
 pmc/pmc_receiver.sv
 pmc/pmc_transmitter.sv
 pmc/pmc.sv
 
 spi/spi_pkg.sv
-spi/spi_offset_decoder.sv
 spi/spi_master.sv
 spi/spi.sv
 
 timer/timer_pkg.sv
 timer/timer_core.sv
-timer/timer_offset_decoder.sv
 timer/timer.sv
 
 uart/uart_pkg.sv
-uart/uart_offset_decoder.sv
 uart/uart_receiver.sv
 uart/uart_transmitter.sv
 uart/uart.sv

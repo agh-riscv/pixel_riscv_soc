@@ -22,25 +22,16 @@ package uart_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define UART_CR_OFFSET  12'h000
-`define UART_SR_OFFSET  12'h004
-`define UART_TDR_OFFSET 12'h008
-`define UART_RDR_OFFSET 12'h00C
-`define UART_CDR_OFFSET 12'h010
+`define UART_CR_OFFSET      12'h000     /* Control Reg offset */
+`define UART_SR_OFFSET      12'h004     /* Status Reg offset */
+`define UART_TDR_OFFSET     12'h008     /* Transmitter Data Reg offset */
+`define UART_RDR_OFFSET     12'h00c     /* Receiver Data Reg offset */
+`define UART_CDR_OFFSET     12'h010     /* Clock Divider Reg offset */
 
 
 /**
  * User defined types
  */
-
-typedef enum logic [2:0] {
-    UART_CR,        /* Control Register */
-    UART_SR,        /* Status Register */
-    UART_TDR,       /* Transmitter Data Register */
-    UART_RDR,       /* Receiver Data Register */
-    UART_CDR,       /* Clock Divider Register */
-    UART_NONE
-} uart_reg_t;
 
 typedef struct packed {
     logic [30:0] res;
@@ -70,11 +61,11 @@ typedef struct packed {
 } uart_cdr_t;
 
 typedef struct packed {
-    uart_cr_t cr;
-    uart_sr_t sr;
+    uart_cr_t  cr;
+    uart_sr_t  sr;
     uart_tdr_t tdr;
     uart_rdr_t rdr;
     uart_cdr_t cdr;
-} uart_t;
+} uart_regs_t;
 
 endpackage

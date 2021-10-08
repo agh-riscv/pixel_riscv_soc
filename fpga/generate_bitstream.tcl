@@ -13,10 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-if {($argc != 1) || ([lindex $argv 0] ni {"arty"})} {
-    puts "usage: vivado -mode tcl -source [info script] -tclargs \[arty\]"
-    exit 1
-}
 set target [lindex $argv 0]
 set part xc7a100tcsg324-1
 set top_module top_pixel_riscv_soc_arty_a7_100
@@ -57,7 +53,6 @@ read_verilog -sv {
 
     ../rtl/soc/gpio/gpio_pkg.sv
     ../rtl/soc/gpio/gpio_interrupt_detector.sv
-    ../rtl/soc/gpio/gpio_offset_decoder.sv
     ../rtl/soc/gpio/gpio.sv
 
     ../rtl/soc/interfaces/ibex_data_bus.sv
@@ -80,14 +75,6 @@ read_verilog -sv {
     ../rtl/soc/misc/edge_detector.sv
     ../rtl/soc/misc/serial_clock_generator.sv
 
-    ../rtl/soc/pmc/analog_conf/pmc_ac_pkg.sv
-    ../rtl/soc/pmc/analog_conf/pmc_ac_offset_decoder.sv
-    ../rtl/soc/pmc/analog_conf/pmc_ac.sv
-
-    ../rtl/soc/pmc/digital_conf/pmc_dc_pkg.sv
-    ../rtl/soc/pmc/digital_conf/pmc_dc_offset_decoder.sv
-    ../rtl/soc/pmc/digital_conf/pmc_dc.sv
-
     ../rtl/soc/pmc/coprocessor/pmcc_pkg.sv
     ../rtl/soc/pmc/coprocessor/pmcc_instr_decoder.sv
     ../rtl/soc/pmc/coprocessor/pmcc_loop_controller.sv
@@ -100,23 +87,19 @@ read_verilog -sv {
     ../rtl/soc/pmc/memories/pmcc_code_ram.sv
 
     ../rtl/soc/pmc/pmc_pkg.sv
-    ../rtl/soc/pmc/pmc_offset_decoder.sv
     ../rtl/soc/pmc/pmc_receiver.sv
     ../rtl/soc/pmc/pmc_transmitter.sv
     ../rtl/soc/pmc/pmc.sv
 
     ../rtl/soc/spi/spi_pkg.sv
-    ../rtl/soc/spi/spi_offset_decoder.sv
     ../rtl/soc/spi/spi_master.sv
     ../rtl/soc/spi/spi.sv
 
     ../rtl/soc/timer/timer_pkg.sv
     ../rtl/soc/timer/timer_core.sv
-    ../rtl/soc/timer/timer_offset_decoder.sv
     ../rtl/soc/timer/timer.sv
 
     ../rtl/soc/uart/uart_pkg.sv
-    ../rtl/soc/uart/uart_offset_decoder.sv
     ../rtl/soc/uart/uart_receiver.sv
     ../rtl/soc/uart/uart_transmitter.sv
     ../rtl/soc/uart/uart.sv
@@ -130,7 +113,6 @@ read_verilog -sv {
     rtl/clkgen_xil7series.sv
     rtl/prim_clock_gating.sv
     rtl/top_pixel_riscv_soc_arty_a7_100.sv
-
 }
 
 read_xdc constraints/arty_a7_100.xdc
