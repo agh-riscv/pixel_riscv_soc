@@ -15,43 +15,289 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import pixel_riscv_soc_pkg::*;
+import memory_map::*;
 
 module data_bus_arbiter (
-    output data_bus_state_t data_bus_state,
-    input logic             clk,
-    input logic             rst_n,
-    input logic             data_bus_req,
-    input logic [31:0]      data_bus_addr
+    input logic          clk,
+    input logic          rst_n,
+
+    ibex_data_bus.slave  core_data_bus,
+
+    ibex_data_bus.master boot_rom_data_bus,
+    ibex_data_bus.master code_ram_data_bus,
+    ibex_data_bus.master data_ram_data_bus,
+
+    ibex_data_bus.master gpio_data_bus,
+    ibex_data_bus.master pmc_data_bus,
+    ibex_data_bus.master spi_data_bus,
+    ibex_data_bus.master timer_data_bus,
+    ibex_data_bus.master uart_data_bus
 );
+
+
+/**
+ * User defined types
+ */
+
+typedef enum logic [1:0] {
+    IDLE,
+    WAITING_FOR_GRANT,
+    WAITING_FOR_RESPONSE
+} state_t;
+
+typedef enum logic [3:0] {
+    BOOT_ROM,
+    CODE_RAM,
+    DATA_RAM,
+    GPIO,
+    SPI,
+    UART,
+    TIMER,
+    PMC,
+    INCORRECT
+} slave_t;
+
+
+/**
+ * Local variables and signals
+ */
+
+state_t state, state_nxt;
+slave_t responding_slave, responding_slave_nxt;
+
+
+/**
+ * Tasks and functions definitions
+ */
+
+`define set_data_bus_slave_active(bus) \
+    bus.req = core_data_bus.req; \
+    bus.we = core_data_bus.we; \
+    bus.be = core_data_bus.be; \
+    bus.addr = core_data_bus.addr; \
+    bus.wdata = core_data_bus.wdata; \
+    bus.wdata_intg = core_data_bus.wdata_intg
+
+`define set_data_bus_slave_inactive(bus) \
+    bus.req = 1'b0; \
+    bus.we = 1'b0; \
+    bus.be = 4'b0; \
+    bus.addr = 32'b0; \
+    bus.wdata = 32'b0; \
+    bus.wdata_intg = 7'b0
+
+`define attach_data_bus_slave(bus) \
+    core_data_bus.gnt = bus.gnt; \
+    core_data_bus.rvalid = bus.rvalid; \
+    core_data_bus.rdata = bus.rdata; \
+    core_data_bus.rdata_intg = bus.rdata_intg; \
+    core_data_bus.err = bus.err
 
 
 /**
  * Module internal logic
  */
 
+/* state control */
+
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
-        data_bus_state.responding_slave <= DATA_BUS_NONE;
+        state <= IDLE;
     else
-        data_bus_state.responding_slave <= data_bus_state.requested_slave;
+        state <= state_nxt;
 end
 
 always_comb begin
-    data_bus_state.requested_slave = DATA_BUS_NONE;
+    state_nxt = state;
 
-    if (data_bus_req) begin
-        case (data_bus_addr) inside
-        `BOOT_ROM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_BOOT_ROM;
-        `CODE_RAM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_CODE_RAM;
-        `DATA_RAM_ADDRESS_SPACE:    data_bus_state.requested_slave = DATA_BUS_DATA_RAM;
-        `GPIO_ADDRESS_SPACE:        data_bus_state.requested_slave = DATA_BUS_GPIO;
-        `SPI_ADDRESS_SPACE:         data_bus_state.requested_slave = DATA_BUS_SPI;
-        `UART_ADDRESS_SPACE:        data_bus_state.requested_slave = DATA_BUS_UART;
-        `TIMER_ADDRESS_SPACE:       data_bus_state.requested_slave = DATA_BUS_TIMER;
-        `PMC_ADDRESS_SPACE:         data_bus_state.requested_slave = DATA_BUS_PMC;
+    case (state)
+    IDLE: begin
+        if (core_data_bus.req)
+            state_nxt = core_data_bus.gnt ? WAITING_FOR_RESPONSE : WAITING_FOR_GRANT;
+    end
+    WAITING_FOR_GRANT: begin
+        if (core_data_bus.gnt)
+            state_nxt = WAITING_FOR_RESPONSE;
+    end
+    WAITING_FOR_RESPONSE: begin
+        if (core_data_bus.rvalid)
+            state_nxt = IDLE;
+    end
+    endcase
+end
+
+/* input signals demultiplexing */
+
+always_comb begin
+    `set_data_bus_slave_inactive(boot_rom_data_bus);
+    `set_data_bus_slave_inactive(code_ram_data_bus);
+    `set_data_bus_slave_inactive(data_ram_data_bus);
+    `set_data_bus_slave_inactive(gpio_data_bus);
+    `set_data_bus_slave_inactive(pmc_data_bus);
+    `set_data_bus_slave_inactive(spi_data_bus);
+    `set_data_bus_slave_inactive(timer_data_bus);
+    `set_data_bus_slave_inactive(uart_data_bus);
+
+    case (state)
+    IDLE,
+    WAITING_FOR_GRANT: begin
+        if (core_data_bus.req) begin
+            case (core_data_bus.addr) inside
+            `BOOT_ROM_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(boot_rom_data_bus);
+            end
+            `CODE_RAM_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(code_ram_data_bus);
+            end
+            `DATA_RAM_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(data_ram_data_bus);
+            end
+            `GPIO_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(gpio_data_bus);
+            end
+            `SPI_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(spi_data_bus);
+            end
+            `UART_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(uart_data_bus);
+            end
+            `TIMER_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(timer_data_bus);
+            end
+            `PMC_ADDRESS_SPACE: begin
+                `set_data_bus_slave_active(pmc_data_bus);
+            end
+            endcase
+        end
+    end
+    WAITING_FOR_RESPONSE: ;
+    endcase
+end
+
+/* output signals multiplexing */
+
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+        responding_slave <= INCORRECT;
+    else
+        responding_slave <= responding_slave_nxt;
+end
+
+always_comb begin
+    responding_slave_nxt = responding_slave;
+    core_data_bus.gnt = 1'b0;
+    core_data_bus.rvalid = 1'b0;
+    core_data_bus.rdata = 32'b0;
+    core_data_bus.rdata_intg = 7'b0;
+    core_data_bus.err = 1'b0;
+
+    case (state)
+    IDLE: begin
+        if (core_data_bus.req) begin
+            case (core_data_bus.addr) inside
+            `BOOT_ROM_ADDRESS_SPACE: begin
+                responding_slave_nxt = BOOT_ROM;
+                `attach_data_bus_slave(boot_rom_data_bus);
+            end
+            `CODE_RAM_ADDRESS_SPACE: begin
+                responding_slave_nxt = CODE_RAM;
+                `attach_data_bus_slave(code_ram_data_bus);
+            end
+            `DATA_RAM_ADDRESS_SPACE: begin
+                responding_slave_nxt = DATA_RAM;
+                `attach_data_bus_slave(data_ram_data_bus);
+            end
+            `GPIO_ADDRESS_SPACE: begin
+                responding_slave_nxt = GPIO;
+                `attach_data_bus_slave(gpio_data_bus);
+            end
+            `SPI_ADDRESS_SPACE: begin
+                responding_slave_nxt = SPI;
+                `attach_data_bus_slave(spi_data_bus);
+            end
+            `UART_ADDRESS_SPACE: begin
+                responding_slave_nxt = UART;
+                `attach_data_bus_slave(uart_data_bus);
+            end
+            `TIMER_ADDRESS_SPACE: begin
+                responding_slave_nxt = TIMER;
+                `attach_data_bus_slave(timer_data_bus);
+            end
+            `PMC_ADDRESS_SPACE: begin
+                responding_slave_nxt = PMC;
+                `attach_data_bus_slave(pmc_data_bus);
+            end
+            default: begin
+                responding_slave_nxt = INCORRECT;
+                core_data_bus.gnt = 1'b1;
+            end
+            endcase
+        end
+    end
+    WAITING_FOR_GRANT: begin
+        case (responding_slave)
+        BOOT_ROM: begin
+            `attach_data_bus_slave(boot_rom_data_bus);
+        end
+        CODE_RAM: begin
+            `attach_data_bus_slave(code_ram_data_bus);
+        end
+        DATA_RAM: begin
+            `attach_data_bus_slave(data_ram_data_bus);
+        end
+        GPIO: begin
+            `attach_data_bus_slave(gpio_data_bus);
+        end
+        SPI: begin
+            `attach_data_bus_slave(spi_data_bus);
+        end
+        UART: begin
+            `attach_data_bus_slave(uart_data_bus);
+        end
+        TIMER: begin
+            `attach_data_bus_slave(timer_data_bus);
+        end
+        PMC: begin
+            `attach_data_bus_slave(pmc_data_bus);
+        end
+        INCORRECT: begin
+            core_data_bus.gnt = 1'b1;
+        end
         endcase
     end
+    WAITING_FOR_RESPONSE: begin
+        case (responding_slave)
+        BOOT_ROM: begin
+            `attach_data_bus_slave(boot_rom_data_bus);
+        end
+        CODE_RAM: begin
+            `attach_data_bus_slave(code_ram_data_bus);
+        end
+        DATA_RAM: begin
+            `attach_data_bus_slave(data_ram_data_bus);
+        end
+        GPIO: begin
+            `attach_data_bus_slave(gpio_data_bus);
+        end
+        SPI: begin
+            `attach_data_bus_slave(spi_data_bus);
+        end
+        UART: begin
+            `attach_data_bus_slave(uart_data_bus);
+        end
+        TIMER: begin
+            `attach_data_bus_slave(timer_data_bus);
+        end
+        PMC: begin
+            `attach_data_bus_slave(pmc_data_bus);
+        end
+        INCORRECT: begin
+            core_data_bus.rvalid = 1'b1;
+            core_data_bus.err = 1'b1;
+        end
+        endcase
+    end
+    endcase
 end
 
 endmodule

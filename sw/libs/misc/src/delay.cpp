@@ -5,7 +5,7 @@ void mdelay(const uint32_t msec)
 {
 #ifdef SIM
     (void)msec;
-    uint32_t loop_iterations{100};
+    uint32_t loop_iterations{10};
 #else
     uint32_t loop_iterations{msec * 5000};
 #endif
@@ -16,7 +16,7 @@ void udelay(const uint32_t usec)
 {
 #ifdef SIM
     (void)usec;
-    uint32_t loop_iterations{10};
+    uint32_t loop_iterations{5};
 #else
     uint32_t loop_iterations{usec * 5};
 #endif

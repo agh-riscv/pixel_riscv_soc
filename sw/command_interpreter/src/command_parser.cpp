@@ -75,6 +75,8 @@ void Command_parser::parse_command_type(Command &command) const
         command.type = Command::Type::get_gpio;
     else if (!strcmp(buf, "set_heartbeat"))
         command.type = Command::Type::set_heartbeat;
+    else if (!strcmp(buf, "calculate"))
+        command.type = Command::Type::calculate;
     else if (!strcmp(buf, "read_matrix"))
         command.type = Command::Type::read_matrix;
     else if (!strcmp(buf, "calibrate_matrix"))

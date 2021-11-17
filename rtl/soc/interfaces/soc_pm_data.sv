@@ -17,15 +17,17 @@
 
 interface soc_pm_data;
 
-logic [31:0] dout, din;
+logic [31:0] dout_a, dout_b, din;
 
 modport master (
     output din,
-    input  dout
+    input  dout_a,
+    input  dout_b
 );
 
 modport slave (
-    output dout,
+    output dout_a,
+    output dout_b,
     input  din
 );
 

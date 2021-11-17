@@ -23,6 +23,7 @@ private:
     int set_gpio(const Command &command) const;
     int get_gpio(const Command &command) const;
     int set_heartbeat(const Command &command) const;
+    int calculate(const Command &command) const;
     void read_matrix() const;
     void calibrate_matrix() const;
 };

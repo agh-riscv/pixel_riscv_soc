@@ -13,7 +13,7 @@ static constexpr uint8_t oenr_offset{0x20};
 
 static constexpr uint8_t codeload_skipping_pin{17};
 static constexpr uint8_t codeload_source_pin{16};
-static constexpr uint8_t bootloader_finished_pin{15};
+static constexpr uint8_t bootloader_status_pin{15};
 
 Gpio gpio{gpio_base_address};
 
@@ -75,8 +75,8 @@ bool Gpio::get_codeload_source_pin() const volatile
     return get_pin(codeload_source_pin);
 }
 
-void Gpio::set_bootloader_finished_pin(const bool value) const volatile
+void Gpio::set_bootloader_status_pin(const bool value) const volatile
 {
-    set_pin_direction(bootloader_finished_pin, Direction::out);
-    set_pin(bootloader_finished_pin, value);
+    set_pin_direction(bootloader_status_pin, Direction::out);
+    set_pin(bootloader_status_pin, value);
 }

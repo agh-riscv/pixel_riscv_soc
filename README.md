@@ -10,6 +10,8 @@ used for detector control and serializers implemented for SoC-detector data exch
 
 The SoC has been verified by simulations and FPGA-based prototype implementation.
 
+![System-on-Chip architecture](doc/img/soc_arch.svg?raw=true "System-on-Chip architecture")
+
 ## X-ray detector calibration
 In order to estimate the SoC performance, the numbers of processor cycles consumed during the execution
 of the three detector-based algorithms were measured. Results of the measurements taken before

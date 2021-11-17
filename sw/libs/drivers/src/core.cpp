@@ -35,6 +35,11 @@ void Core::execute_10_cycles_loop(const uint32_t iterations) const
     );
 }
 
+void Core::set_exceptions_handler(void (*handler)())
+{
+    exceptions_handler = handler;
+}
+
 void Core::enable_interrupts() const
 {
     asm volatile ("csrrsi t0, mstatus, 1<<3");
@@ -79,6 +84,14 @@ void Core::disable_timer_interrupts()
         "li    t0, 1<<17    \n"
         "csrrc t0, mie,  t0 \n"
     );
+}
+
+extern "C" __attribute__ ((interrupt)) void exceptions_handler(void)
+{
+    if (core.exceptions_handler)
+        core.exceptions_handler();
+    else
+        while (true) { }
 }
 
 extern "C" __attribute__ ((interrupt)) void gpio_irq_handler(void)

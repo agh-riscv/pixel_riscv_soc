@@ -24,6 +24,7 @@ target_sources(${app} PRIVATE
     crt0.S
     src/code_loader.cpp
     src/main.cpp
+    src/status_led.cpp
 )
 
 add_custom_command(TARGET ${app} POST_BUILD

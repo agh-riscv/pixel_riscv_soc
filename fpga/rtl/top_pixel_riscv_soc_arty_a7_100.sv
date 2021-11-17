@@ -36,6 +36,7 @@ module top_pixel_riscv_soc_arty_a7_100 (
 logic                 clk, rst_n;
 
 soc_gpio_bus          gpio_bus ();
+soc_pmc_bus           pmc_bus ();
 soc_spi_bus           spi_bus ();
 soc_uart_bus          uart_bus ();
 
@@ -75,13 +76,23 @@ assign uart_bus.sin = sin;
 pixel_riscv_soc u_pixel_riscv_soc (
     .clk,
     .rst_n,
+
     .gpio_bus,
+    .pmc_bus,
     .spi_bus,
     .uart_bus,
+
     .pm_ctrl,
     .pm_data,
     .pm_analog_config,
     .pm_digital_config
+);
+
+clkgen_xil7series u_clkgen_xil7series (
+    .IO_CLK(clk_io),
+    .IO_RST_N(rst_n_io),
+    .clk_sys(clk),
+    .rst_sys_n(rst_n)
 );
 
 spi_flash_memory u_spi_flash_memory (
@@ -91,13 +102,6 @@ spi_flash_memory u_spi_flash_memory (
     .ss(spi_bus.ss),
     .sck(spi_bus.sck),
     .mosi(spi_bus.mosi)
-);
-
-clkgen_xil7series u_clkgen_xil7series (
-    .IO_CLK(clk_io),
-    .IO_RST_N(rst_n_io),
-    .clk_sys(clk),
-    .rst_sys_n(rst_n)
 );
 
 endmodule

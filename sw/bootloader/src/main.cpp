@@ -1,8 +1,9 @@
 #include "code_loader.h"
 #include "gpio.h"
+#include "status_led.h"
 #include "ui.h"
 
-static inline void update_trap_vector_base_address(void)
+static inline void update_trap_vector_base_address()
 {
     asm volatile (
         "li    t0, 0x10000    \n"
@@ -10,32 +11,37 @@ static inline void update_trap_vector_base_address(void)
     );
 }
 
-static inline void jump_to_loaded_software(void)
+static inline void jump_to_loaded_software()
 {
     asm ("j 0x10080");
 }
 
 int main()
 {
-    ui << "bootloader started\n";
+    ui << "INFO: bootloader started\n";
+    Status_led::signalize_bootloader_start();
 
     if (gpio.get_codeload_skipping_pin()) {
-        ui << "codeload skipped\n";
+        ui << "INFO: codeload skipped\n";
     } else {
-        Code_loader::Source codeload_source;
         if (gpio.get_codeload_source_pin()) {
-            codeload_source = Code_loader::Source::uart;
-            ui << "codeload source: uart\n";
+            ui << "INFO: codeload source: uart\n";
+            if (Code_loader::load_code_through_uart()) {
+                ui << "ERROR: codeload timeout occurred\n";
+                Status_led::signalize_codeload_failure();
+            }
         } else {
-            codeload_source = Code_loader::Source::spi;
-            ui << "codeload source: spi\n";
+            ui << "INFO: codeload source: spi\n";
+            Code_loader::load_code_through_spi();
         }
-        Code_loader::load_code(codeload_source);
-        ui << "codeload finished\n";
-    }
-    update_trap_vector_base_address();
 
-    ui << "bootloader finished\n";
-    gpio.set_bootloader_finished_pin(true);
+        ui << "INFO: codeload finished\n";
+        Status_led::signalize_codeload_success();
+    }
+
+    update_trap_vector_base_address();
+    ui << "INFO: bootloader finished\n";
+    Status_led::signalize_bootloader_end();
+
     jump_to_loaded_software();
 }

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Wygenerowane w programie Microsoft Visio, SVG Export RISC-V X-ray detector.svg arch v3 -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"
+		width="7.37939in" height="5.22642in" viewBox="0 0 531.316 376.303" xml:space="preserve" color-interpolation-filters="sRGB"
+		class="st15">
+	<style type="text/css">
+	<![CDATA[
+		.st1 {fill:#a8a9ad;marker-end:url(#mrkr13-6);marker-start:url(#mrkr13-4);stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st2 {fill:#000000;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.22935779816514}
+		.st3 {fill:#1e1e1e;font-family:Verdana;font-size:1.00001em}
+		.st4 {fill:#a71930;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st5 {fill:#ffffff;font-family:Verdana;font-size:1.00001em}
+		.st6 {fill:#00693c;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.75}
+		.st7 {marker-end:url(#mrkr4-34);marker-start:url(#mrkr4-32);stroke:#a8a9ad;stroke-width:16}
+		.st8 {fill:#a8a9ad;fill-opacity:1;stroke:#a8a9ad;stroke-opacity:1;stroke-width:0.91743119266055}
+		.st9 {fill:#000000;font-family:Verdana;font-size:1.00001em}
+		.st10 {font-size:1em}
+		.st11 {marker-end:url(#mrkr4-61);marker-start:url(#mrkr4-59);stroke:#a71930;stroke-linecap:round;stroke-linejoin:round;stroke-width:4}
+		.st12 {fill:#a71930;fill-opacity:1;stroke:#a71930;stroke-opacity:1;stroke-width:0.73529411764706}
+		.st13 {marker-end:url(#mrkr4-70);marker-start:url(#mrkr4-68);stroke:#00693c;stroke-linecap:round;stroke-linejoin:round;stroke-width:2}
+		.st14 {fill:#00693c;fill-opacity:1;stroke:#00693c;stroke-opacity:1;stroke-width:0.58139534883721}
+		.st15 {fill:none;fill-rule:evenodd;font-size:12px;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Markers">
+		<g id="lend13">
+			<path d="M 3 1 L 0 0 L 3 -1 L 3 1 " style="stroke:none"/>
+		</g>
+		<marker id="mrkr13-4" class="st2" refX="13.08" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend13" transform="scale(4.36) "/>
+		</marker>
+		<marker id="mrkr13-6" class="st2" refX="-13.08" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend13" transform="scale(-4.36,-4.36) "/>
+		</marker>
+		<g id="lend4">
+			<path d="M 2 1 L 0 0 L 2 -1 L 2 1 " style="stroke:none"/>
+		</g>
+		<marker id="mrkr4-32" class="st8" refX="2.1575" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(1.09) "/>
+		</marker>
+		<marker id="mrkr4-34" class="st8" refX="-2.18" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(-1.09,-1.09) "/>
+		</marker>
+		<marker id="mrkr4-59" class="st12" refX="2.63" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(1.36) "/>
+		</marker>
+		<marker id="mrkr4-61" class="st12" refX="-2.72" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(-1.36,-1.36) "/>
+		</marker>
+		<marker id="mrkr4-68" class="st14" refX="3.26" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(1.72) "/>
+		</marker>
+		<marker id="mrkr4-70" class="st14" refX="-3.44" orient="auto" markerUnits="strokeWidth" overflow="visible">
+			<use xlink:href="#lend4" transform="scale(-1.72,-1.72) "/>
+		</marker>
+	</defs>
+	<g>
+		<title>arch v3</title>
+		<g id="shape1014-1" transform="translate(99.2126,-35.4331)">
+			<title>Arkusz.1014</title>
+			<desc>Peripherals</desc>
+			<rect x="0" y="312.523" width="335.906" height="63.7795" class="st1"/>
+			<text x="265.01" y="368.7" class="st3">Peripherals</text>		</g>
+		<g id="shape1000-8" transform="translate(118.429,-153.988)">
+			<title>Arkusz.1000</title>
+			<desc>CPU</desc>
+			<rect x="0" y="317.692" width="106.941" height="58.61" class="st4"/>
+			<text x="41.27" y="350.6" class="st5">CPU</text>		</g>
+		<g id="shape1006-11" transform="translate(110.041,-58.1566)">
+			<title>Arkusz.1006</title>
+			<desc>GPIO</desc>
+			<rect x="0" y="347.956" width="58.1102" height="28.3465" class="st6"/>
+			<text x="13.54" y="365.73" class="st5">GPIO</text>		</g>
+		<g id="shape1007-14" transform="translate(237.601,-58.1566)">
+			<title>Arkusz.1007</title>
+			<desc>SPI</desc>
+			<rect x="0" y="347.956" width="58.1102" height="28.3465" class="st6"/>
+			<text x="18.81" y="365.73" class="st5">SPI</text>		</g>
+		<g id="shape1008-17" transform="translate(301.38,-58.1566)">
+			<title>Arkusz.1008</title>
+			<desc>TIMER</desc>
+			<rect x="0" y="347.956" width="58.1102" height="28.3465" class="st6"/>
+			<text x="9.81" y="365.73" class="st5">TIMER</text>		</g>
+		<g id="shape1009-20" transform="translate(365.16,-58.1566)">
+			<title>Arkusz.1009</title>
+			<desc>UART</desc>
+			<rect x="0" y="347.956" width="58.1102" height="28.3465" class="st6"/>
+			<text x="12.69" y="365.73" class="st5">UART</text>		</g>
+		<g id="shape1010-23" transform="translate(173.821,-58.1566)">
+			<title>Arkusz.1010</title>
+			<desc>PMC</desc>
+			<rect x="0" y="347.956" width="58.1102" height="28.3465" class="st6"/>
+			<text x="16.19" y="365.73" class="st5">PMC</text>		</g>
+		<g id="shape1013-26" transform="translate(56.997,-120.467)">
+			<title>Arkusz.1013</title>
+			<desc>Data bus</desc>
+			<path d="M34.52 376.3 L34.88 376.3 L382.44 376.3" class="st7"/>
+			<text x="188.78" y="379.9" class="st9">Data bus</text>		</g>
+		<g id="shape1016-36" transform="translate(224.109,-268.441)">
+			<title>Arkusz.1016</title>
+			<desc>Memories</desc>
+			<rect x="0" y="301.751" width="208.063" height="74.5512" class="st1"/>
+			<text x="4" y="316.55" class="st3">Memories</text>		</g>
+		<g id="shape1017-41" transform="translate(234.03,-281.178)">
+			<title>Arkusz.1017</title>
+			<desc>Boot ROM</desc>
+			<rect x="0" y="336.75" width="58.1102" height="39.5528" class="st6"/>
+			<text x="15.29" y="352.93" class="st5">Boot <tspan x="15.1" dy="1.2em" class="st10">ROM</tspan></text>		</g>
+		<g id="shape1018-45" transform="translate(361.589,-281.178)">
+			<title>Arkusz.1018</title>
+			<desc>Data RAM</desc>
+			<rect x="0" y="336.75" width="58.1102" height="39.5528" class="st6"/>
+			<text x="14.86" y="352.93" class="st5">Data <tspan x="15.73" dy="1.2em" class="st10">RAM</tspan></text>		</g>
+		<g id="shape1021-49" transform="translate(297.81,-281.178)">
+			<title>Arkusz.1021</title>
+			<desc>Code RAM</desc>
+			<rect x="0" y="336.75" width="58.1102" height="39.5528" class="st6"/>
+			<text x="13.91" y="352.93" class="st5">Code <tspan x="15.73" dy="1.2em" class="st10">RAM</tspan></text>		</g>
+		<g id="shape1024-53" transform="translate(164.677,-153.934)">
+			<title>Łącznik dynamiczny.1024</title>
+			<path d="M7.09 386.82 L7.09 387.18 L7.09 390.79" class="st11"/>
+		</g>
+		<g id="shape1025-62" transform="translate(134.986,-86.5031)">
+			<title>Łącznik dynamiczny.1025</title>
+			<path d="M7.09 369.78 L7.09 369.42 L7.09 357.48" class="st13"/>
+		</g>
+		<g id="shape1026-71" transform="translate(196.215,-86.5031)">
+			<title>Łącznik dynamiczny.1026</title>
+			<path d="M7.09 369.78 L7.09 369.42 L7.09 357.48" class="st13"/>
+		</g>
+		<g id="shape1027-78" transform="translate(258.577,-86.5031)">
+			<title>Łącznik dynamiczny.1027</title>
+			<path d="M7.09 369.78 L7.09 369.42 L7.09 357.35" class="st13"/>
+		</g>
+		<g id="shape1028-85" transform="translate(323.774,-86.5031)">
+			<title>Łącznik dynamiczny.1028</title>
+			<path d="M7.09 369.78 L7.09 369.42 L7.09 357.48" class="st13"/>
+		</g>
+		<g id="shape1029-92" transform="translate(386.136,-86.5031)">
+			<title>Łącznik dynamiczny.1029</title>
+			<path d="M7.09 369.78 L7.09 369.42 L7.09 357.48" class="st13"/>
+		</g>
+		<g id="shape1036-99" transform="translate(56.997,-245.764)">
+			<title>Arkusz.1036</title>
+			<desc>Instruction bus</desc>
+			<path d="M34.52 376.3 L34.88 376.3 L382.44 376.3" class="st7"/>
+			<text x="46.52" y="379.9" class="st9">Instruction bus</text>		</g>
+		<g id="shape1038-107" transform="translate(242.766,-281.178)">
+			<title>Łącznik dynamiczny.1038</title>
+			<path d="M7.09 382.82 L7.09 383.18 L7.09 396.93" class="st13"/>
+		</g>
+		<g id="shape1039-114" transform="translate(257.841,-281.178)">
+			<title>Łącznik dynamiczny.1039</title>
+			<path d="M7.09 382.82 L7.09 383.18 L7.09 522" class="st13"/>
+		</g>
+		<g id="shape1040-121" transform="translate(315.385,-281.178)">
+			<title>Łącznik dynamiczny.1040</title>
+			<path d="M7.09 382.82 L7.09 383.18 L7.09 396.86" class="st13"/>
+		</g>
+		<g id="shape1041-128" transform="translate(325.873,-281.178)">
+			<title>Łącznik dynamiczny.1041</title>
+			<path d="M7.09 382.82 L7.09 383.18 L7.09 521.78" class="st13"/>
+		</g>
+		<g id="shape1042-135" transform="translate(382.566,-281.178)">
+			<title>Łącznik dynamiczny.1042</title>
+			<path d="M7.09 382.82 L7.09 383.18 L7.09 521.7" class="st13"/>
+		</g>
+		<g id="shape1043-142" transform="translate(164.677,-237.966)">
+			<title>Łącznik dynamiczny.1043</title>
+			<path d="M7.09 386.82 L7.09 387.18 L7.09 390.79" class="st11"/>
+		</g>
+	</g>
+</svg>

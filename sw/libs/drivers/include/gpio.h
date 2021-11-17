@@ -28,7 +28,7 @@ public:
 
     bool get_codeload_skipping_pin() const volatile;
     bool get_codeload_source_pin() const volatile;
-    void set_bootloader_finished_pin(const bool value) const volatile;
+    void set_bootloader_status_pin(const bool value) const volatile;
 
 private:
     volatile uint32_t * const cr;

@@ -63,3 +63,8 @@ bool Uart::is_receiver_ready() const volatile
 {
     return sr->rxne;
 }
+
+uint8_t Uart::get_rdata() const volatile
+{
+    return rdr->data;
+}

@@ -20,6 +20,7 @@ module pixel_riscv_soc (
     input logic                  rst_n,
 
     soc_gpio_bus.master          gpio_bus,
+    soc_pmc_bus.master           pmc_bus,
     soc_spi_bus.master           spi_bus,
     soc_uart_bus.master          uart_bus,
 
@@ -34,8 +35,22 @@ module pixel_riscv_soc (
  * Local variables and signals
  */
 
-ibex_instr_bus instr_bus ();
-ibex_data_bus  data_bus ();
+ibex_data_bus  core_data_bus ();
+ibex_instr_bus core_instr_bus ();
+
+ibex_data_bus  boot_rom_data_bus ();
+ibex_data_bus  code_ram_data_bus ();
+ibex_data_bus  data_ram_data_bus ();
+
+ibex_data_bus  gpio_data_bus ();
+ibex_data_bus  pmc_data_bus ();
+ibex_data_bus  spi_data_bus ();
+ibex_data_bus  timer_data_bus ();
+ibex_data_bus  uart_data_bus ();
+
+ibex_instr_bus boot_rom_instr_bus ();
+ibex_instr_bus code_ram_instr_bus ();
+
 soc_timer_bus  timer_bus ();
 
 
@@ -73,25 +88,25 @@ ibex_top #(
     .hart_id_i(32'b0),
     .boot_addr_i(32'h0000_0000),
 
-    .instr_req_o(instr_bus.req),
-    .instr_gnt_i(instr_bus.gnt),
-    .instr_rvalid_i(instr_bus.rvalid),
-    .instr_addr_o(instr_bus.addr),
-    .instr_rdata_i(instr_bus.rdata),
-    .instr_rdata_intg_i(instr_bus.rdata_intg),
-    .instr_err_i(instr_bus.err),
+    .instr_req_o(core_instr_bus.req),
+    .instr_gnt_i(core_instr_bus.gnt),
+    .instr_rvalid_i(core_instr_bus.rvalid),
+    .instr_addr_o(core_instr_bus.addr),
+    .instr_rdata_i(core_instr_bus.rdata),
+    .instr_rdata_intg_i(core_instr_bus.rdata_intg),
+    .instr_err_i(core_instr_bus.err),
 
-    .data_req_o(data_bus.req),
-    .data_gnt_i(data_bus.gnt),
-    .data_rvalid_i(data_bus.rvalid),
-    .data_we_o(data_bus.we),
-    .data_be_o(data_bus.be),
-    .data_addr_o(data_bus.addr),
-    .data_wdata_o(data_bus.wdata),
-    .data_wdata_intg_o(data_bus.wdata_intg),
-    .data_rdata_i(data_bus.rdata),
-    .data_rdata_intg_i(data_bus.rdata_intg),
-    .data_err_i(data_bus.err),
+    .data_req_o(core_data_bus.req),
+    .data_gnt_i(core_data_bus.gnt),
+    .data_rvalid_i(core_data_bus.rvalid),
+    .data_we_o(core_data_bus.we),
+    .data_be_o(core_data_bus.be),
+    .data_addr_o(core_data_bus.addr),
+    .data_wdata_o(core_data_bus.wdata),
+    .data_wdata_intg_o(core_data_bus.wdata_intg),
+    .data_rdata_i(core_data_bus.rdata),
+    .data_rdata_intg_i(core_data_bus.rdata_intg),
+    .data_err_i(core_data_bus.err),
 
     .irq_software_i(1'b0),
     .irq_timer_i(1'b0),
@@ -110,14 +125,57 @@ ibex_top #(
     .scan_rst_ni(1'b1)
 );
 
+data_bus_arbiter u_data_bus_arbiter (
+    .clk,
+    .rst_n,
+
+    .core_data_bus,
+
+    .boot_rom_data_bus,
+    .code_ram_data_bus,
+    .data_ram_data_bus,
+
+    .gpio_data_bus,
+    .pmc_data_bus,
+    .spi_data_bus,
+    .timer_data_bus,
+    .uart_data_bus
+);
+
+instr_bus_arbiter u_instr_bus_arbiter (
+    .clk,
+    .rst_n,
+
+    .core_instr_bus,
+
+    .boot_rom_instr_bus,
+    .code_ram_instr_bus
+);
+
+memories u_memories (
+    .clk,
+    .rst_n,
+
+    .boot_rom_data_bus,
+    .code_ram_data_bus,
+    .data_ram_data_bus,
+
+    .boot_rom_instr_bus,
+    .code_ram_instr_bus
+);
+
 peripherals u_peripherals (
     .clk,
     .rst_n,
 
-    .instr_bus,
-    .data_bus,
+    .gpio_data_bus,
+    .pmc_data_bus,
+    .spi_data_bus,
+    .timer_data_bus,
+    .uart_data_bus,
 
     .gpio_bus,
+    .pmc_bus,
     .spi_bus,
     .timer_bus,
     .uart_bus,

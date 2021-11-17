@@ -17,35 +17,24 @@
 
 interface soc_pm_ctrl;
 
-logic [9:0] res;        /* ctrl[15:6]:  the reserved bits */
-logic       write_cfg;  /* ctrl[5]:     latch configuration into the pixel config registers (copy from shift register) */
-logic       strobe;     /* ctrl[4]:     increment all counters in the pixels that are not masked */
-logic       gate;       /* ctrl[3]:     gate for registration of the hits in the pixel; when closed (1->0) a new */
-                        /*              random value appears in the counter; this works only if shA == 0; */
-logic       shB;        /* ctrl[2]:     not used */
-logic       shA;        /* ctrl[1]:     mode select for the pixel counters/registers, when: */
-                        /*                  shA == 0; pixel operates in the counter mode */
-                        /*                  shA == 1; pixel operates in the shift mode */
-logic       clkSh;      /* ctrl[0]:     clock for shifting the pixel counters/registers, works only if shA == 1 */
+logic [31:0] store, strobe, gate, sh_b, sh_a, clk_sh;
 
 modport master (
-    output res,
-    output write_cfg,
+    output store,
     output strobe,
     output gate,
-    output shB,
-    output shA,
-    output clkSh
+    output sh_b,
+    output sh_a,
+    output clk_sh
 );
 
 modport slave (
-    input res,
-    input write_cfg,
+    input store,
     input strobe,
     input gate,
-    input shB,
-    input shA,
-    input clkSh
+    input sh_b,
+    input sh_a,
+    input clk_sh
 );
 
 endinterface

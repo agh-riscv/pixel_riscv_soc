@@ -32,7 +32,8 @@
  */
 
 .org  0x00
-.rept 16
+    jal     x0,     exceptions_handler
+.rept 15
     jal     x0,     default_exc_handler
 .endr
 .org  0x40
@@ -53,7 +54,6 @@
 /* ecall handler */
 .org  0x88
     jal     x0,     default_exc_handler
-
 
 .section .text
 

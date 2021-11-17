@@ -51,10 +51,6 @@ read_verilog -sv {
     ../rtl/misc/spi_flash_memory/spi_mem.sv
     ../rtl/misc/spi_flash_memory/spi_slave.sv
 
-    ../rtl/soc/gpio/gpio_pkg.sv
-    ../rtl/soc/gpio/gpio_interrupt_detector.sv
-    ../rtl/soc/gpio/gpio.sv
-
     ../rtl/soc/interfaces/ibex_data_bus.sv
     ../rtl/soc/interfaces/ibex_instr_bus.sv
     ../rtl/soc/interfaces/soc_gpio_bus.sv
@@ -62,6 +58,8 @@ read_verilog -sv {
     ../rtl/soc/interfaces/soc_pm_ctrl.sv
     ../rtl/soc/interfaces/soc_pm_data.sv
     ../rtl/soc/interfaces/soc_pm_digital_config.sv
+    ../rtl/soc/interfaces/soc_pmc_bus.sv
+    ../rtl/soc/interfaces/soc_pmc_pm_ctrl.sv
     ../rtl/soc/interfaces/soc_spi_bus.sv
     ../rtl/soc/interfaces/soc_timer_bus.sv
     ../rtl/soc/interfaces/soc_uart_bus.sv
@@ -71,43 +69,49 @@ read_verilog -sv {
     ../rtl/soc/memories/boot_rom.sv
     ../rtl/soc/memories/code_ram.sv
     ../rtl/soc/memories/data_ram.sv
+    ../rtl/soc/memories/memories.sv
 
     ../rtl/soc/misc/edge_detector.sv
     ../rtl/soc/misc/serial_clock_generator.sv
 
-    ../rtl/soc/pmc/coprocessor/pmcc_pkg.sv
-    ../rtl/soc/pmc/coprocessor/pmcc_instr_decoder.sv
-    ../rtl/soc/pmc/coprocessor/pmcc_loop_controller.sv
-    ../rtl/soc/pmc/coprocessor/pmcc_loop_lifo.sv
-    ../rtl/soc/pmc/coprocessor/pmcc_matrix_controller.sv
-    ../rtl/soc/pmc/coprocessor/pmcc_wait_controller.sv
-    ../rtl/soc/pmc/coprocessor/pmcc.sv
+    ../rtl/soc/peripherals/gpio/gpio_pkg.sv
+    ../rtl/soc/peripherals/gpio/gpio_interrupt_detector.sv
+    ../rtl/soc/peripherals/gpio/gpio.sv
 
-    ../rtl/soc/pmc/memories/fpga/pmcc_dpram.sv
-    ../rtl/soc/pmc/memories/pmcc_code_ram.sv
+    ../rtl/soc/peripherals/pmc/coprocessor/pmcc_pkg.sv
+    ../rtl/soc/peripherals/pmc/coprocessor/pmcc_instr_decoder.sv
+    ../rtl/soc/peripherals/pmc/coprocessor/pmcc_loop_controller.sv
+    ../rtl/soc/peripherals/pmc/coprocessor/pmcc_loop_lifo.sv
+    ../rtl/soc/peripherals/pmc/coprocessor/pmcc_matrix_controller.sv
+    ../rtl/soc/peripherals/pmc/coprocessor/pmcc_wait_controller.sv
+    ../rtl/soc/peripherals/pmc/coprocessor/pmcc.sv
 
-    ../rtl/soc/pmc/pmc_pkg.sv
-    ../rtl/soc/pmc/pmc_receiver.sv
-    ../rtl/soc/pmc/pmc_transmitter.sv
-    ../rtl/soc/pmc/pmc.sv
+    ../rtl/soc/peripherals/pmc/memories/fpga/pmcc_dpram.sv
+    ../rtl/soc/peripherals/pmc/memories/pmcc_code_ram.sv
 
-    ../rtl/soc/spi/spi_pkg.sv
-    ../rtl/soc/spi/spi_master.sv
-    ../rtl/soc/spi/spi.sv
+    ../rtl/soc/peripherals/pmc/pmc_pkg.sv
+    ../rtl/soc/peripherals/pmc/pmc_receiver.sv
+    ../rtl/soc/peripherals/pmc/pmc_transmitter.sv
+    ../rtl/soc/peripherals/pmc/pmc.sv
 
-    ../rtl/soc/timer/timer_pkg.sv
-    ../rtl/soc/timer/timer_core.sv
-    ../rtl/soc/timer/timer.sv
+    ../rtl/soc/peripherals/spi/spi_pkg.sv
+    ../rtl/soc/peripherals/spi/spi_master.sv
+    ../rtl/soc/peripherals/spi/spi.sv
 
-    ../rtl/soc/uart/uart_pkg.sv
-    ../rtl/soc/uart/uart_receiver.sv
-    ../rtl/soc/uart/uart_transmitter.sv
-    ../rtl/soc/uart/uart.sv
+    ../rtl/soc/peripherals/timer/timer_pkg.sv
+    ../rtl/soc/peripherals/timer/timer_core.sv
+    ../rtl/soc/peripherals/timer/timer.sv
 
-    ../rtl/soc/pixel_riscv_soc_pkg.sv
+    ../rtl/soc/peripherals/uart/uart_pkg.sv
+    ../rtl/soc/peripherals/uart/uart_receiver.sv
+    ../rtl/soc/peripherals/uart/uart_transmitter.sv
+    ../rtl/soc/peripherals/uart/uart.sv
+
+    ../rtl/soc/peripherals/peripherals.sv
+
+    ../rtl/soc/memory_map.sv
     ../rtl/soc/data_bus_arbiter.sv
     ../rtl/soc/instr_bus_arbiter.sv
-    ../rtl/soc/peripherals.sv
     ../rtl/soc/pixel_riscv_soc.sv
 
     rtl/clkgen_xil7series.sv

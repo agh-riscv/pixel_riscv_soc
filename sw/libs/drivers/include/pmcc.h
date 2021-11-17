@@ -6,6 +6,8 @@
 
 class Pmcc final {
 public:
+    enum class Counter {a, b};
+
     Pmcc(const uint32_t pmc_cr_address, const uint32_t pmc_sr_address);
     Pmcc(const Pmcc &) = delete;
     Pmcc(Pmcc &&) = delete;
@@ -17,7 +19,7 @@ public:
     bool is_waiting_for_trigger() const volatile;
 
     void load_application(const uint8_t *code, int size) const volatile;
-    void load_data_shifter() const volatile;
+    void load_data_shifter(const Counter counter) const volatile;
     void load_config_latcher() const volatile;
     void load_hits_generator() const volatile;
 

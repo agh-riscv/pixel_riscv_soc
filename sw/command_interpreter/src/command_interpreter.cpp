@@ -47,6 +47,9 @@ void Command_interpreter::run() const
         case cmd_type::set_heartbeat:
             err = set_heartbeat(command);
             break;
+        case cmd_type::calculate:
+            calculate(command);
+            break;
         case cmd_type::read_matrix:
             read_matrix();
             break;
@@ -77,6 +80,7 @@ void Command_interpreter::help() const
         "set_gpio <pin> <value>            - set gpio pin\n"
         "get_gpio <pin>                    - get gpio pin\n"
         "set_heartbeat <period [ms]>       - set heartbeat\n"
+        "calculate <arg1> [+|-|*|/] <arg2> - perform calculation\n"
         "read_matrix                       - read matrix\n"
         "calibrate_matrix                  - calibrate pixels offsets\n"
     };
@@ -190,13 +194,52 @@ int Command_interpreter::set_heartbeat(const Command &command) const
     return 0;
 }
 
+int Command_interpreter::calculate(const Command &command) const
+{
+    if (command.argc < 3) {
+        ui << "error: missing argument(s)\n";
+        return 1;
+    } else if (command.args[0].type != arg_type::number ||
+        command.args[1].type != arg_type::string ||
+        command.args[2].type != arg_type::number) {
+        ui << "error: invalid argument(s) type(s)\n";
+        return 1;
+    }
+
+    int err{0};
+
+    switch (command.args[1].buf[0]) {
+    case '+':
+        ui << command.args[0].val + command.args[2].val << "\n";
+        break;
+    case '-':
+        ui << command.args[0].val - command.args[2].val << "\n";
+        break;
+    case '*':
+        ui << command.args[0].val * command.args[2].val << "\n";
+        break;
+    case '/':
+        if (command.args[2].val) {
+            ui << command.args[0].val / command.args[2].val << "\n";
+        } else {
+            ui << "error: division by zero\n";
+            err = 1;
+        }
+        break;
+    default:
+        ui << "error: unrecognized operation\n";
+        err = 1;
+    }
+    return err;
+}
+
 void Command_interpreter::read_matrix() const
 {
 #if defined ARTY || defined ASIC
     pmc.set_dout({0});
 
     const auto start{core.get_performance_counter()};
-    const auto matrix{pixel_matrix.read()};
+    const auto matrix{pixel_matrix.read(Pixel_matrix::Counter::a)};
     const auto stop{core.get_performance_counter()};
     const auto readout_time{static_cast<uint32_t>(stop - start)};
     debug_dec_word(readout_time);

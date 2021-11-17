@@ -27,6 +27,18 @@ module boot_rom (
  * Local variables and signals
  */
 
+typedef enum logic [1:0] {
+    IDLE,
+    DATA_READOUT,
+    INSTR_READOUT
+} state_t;
+
+
+/**
+ * Local variables and signals
+ */
+
+state_t      state, state_nxt;
 logic [31:0] addr, rdata;
 
 
@@ -56,6 +68,64 @@ boot_mem u_boot_mem (
  */
 
 always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+        state <= IDLE;
+    else
+        state <= state_nxt;
+end
+
+always_comb begin
+    state_nxt = state;
+
+    case (state)
+    IDLE: begin
+        if (data_bus.req)
+            state_nxt = DATA_READOUT;
+        else if (instr_bus.req)
+            state_nxt = INSTR_READOUT;
+    end
+    DATA_READOUT,
+    INSTR_READOUT: begin
+        state_nxt = IDLE;
+    end
+    endcase
+end
+
+always_comb begin
+    data_bus.gnt = 1'b0;
+    instr_bus.gnt = 1'b0;
+
+    case (state)
+    IDLE: begin
+        if (data_bus.req)
+            data_bus.gnt = 1'b1;
+        else if (instr_bus.req)
+            instr_bus.gnt = 1'b1;
+    end
+    DATA_READOUT,
+    INSTR_READOUT: ;
+    endcase
+end
+
+always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        addr <= 32'b0;
+    end
+    else begin
+        case (state)
+        IDLE: begin
+            if (data_bus.req)
+                addr <= data_bus.addr;
+            else if (instr_bus.req)
+                addr <= instr_bus.addr;
+        end
+        DATA_READOUT,
+        INSTR_READOUT: ;
+        endcase
+    end
+end
+
+always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rvalid <= 1'b0;
         data_bus.rdata <= 32'b0;
@@ -63,25 +133,20 @@ always_ff @(posedge clk or negedge rst_n) begin
         instr_bus.rdata <= 32'b0;
     end
     else begin
-        data_bus.rvalid <= data_bus.gnt;
-        data_bus.rdata <= rdata;
-        instr_bus.rvalid <= instr_bus.gnt;
-        instr_bus.rdata <= rdata;
-    end
-end
-
-always_comb begin
-    addr = 32'b0;
-    data_bus.gnt = 1'b0;
-    instr_bus.gnt = 1'b0;
-
-    if (data_bus.req) begin
-        addr = data_bus.addr;
-        data_bus.gnt = 1'b1;
-    end
-    else if (instr_bus.req) begin
-        addr = instr_bus.addr;
-        instr_bus.gnt = 1'b1;
+        case (state)
+        IDLE: begin
+            data_bus.rvalid <= 1'b0;
+            instr_bus.rvalid <= 1'b0;
+        end
+        DATA_READOUT: begin
+            data_bus.rvalid <= 1'b1;
+            data_bus.rdata <= rdata;
+        end
+        INSTR_READOUT: begin
+            instr_bus.rvalid <= 1'b1;
+            instr_bus.rdata <= rdata;
+        end
+        endcase
     end
 end
 

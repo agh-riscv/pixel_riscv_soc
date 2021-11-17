@@ -36,16 +36,9 @@ function generate_spi_mem {
 # Script internal logic
 # ------------------------------------------------------------------------------
 
-if ! compile_programs; then
-    echo "ERROR: programs compilation failed"
-    exit 1
-elif ! generate_boot_mem; then
-    echo "ERROR: boot_mem generation failed"
-    exit 1
-elif ! generate_spi_mem; then
-    echo "ERROR: spi_mem generation failed"
-    exit 1
-fi
+compile_programs || { echo "ERROR: programs compilation failed"; exit 1; }
+generate_boot_mem || { echo "ERROR: boot_mem generation failed"; exit 1; }
+generate_spi_mem || { echo "ERROR: code_mem generation failed"; exit 1; }
 
 cd fpga
 ./clear.sh

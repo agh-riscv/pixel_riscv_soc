@@ -14,6 +14,7 @@ public:
         set_gpio,
         get_gpio,
         set_heartbeat,
+        calculate,
         read_matrix,
         calibrate_matrix,
         unrecognized,

@@ -19,14 +19,15 @@ public:
     void write(const uint8_t byte) const volatile;
     void write(const char *src) const volatile;
 
+    bool is_receiver_ready() const volatile;
+    uint8_t get_rdata() const volatile;
+
 private:
     volatile Uart_cr * const cr;
     volatile Uart_sr * const sr;
     volatile Uart_tdr * const tdr;
     volatile Uart_rdr * const rdr;
     volatile Uart_cdr * const cdr;
-
-    bool is_receiver_ready() const volatile;
 };
 
 extern Uart uart;
