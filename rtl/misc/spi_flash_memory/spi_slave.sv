@@ -84,8 +84,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         state        <= IDLE;
         bits_counter <= 4'b0;
-    end
-    else begin
+    end else begin
         state        <= state_nxt;
         bits_counter <= bits_counter_nxt;
     end
@@ -101,8 +100,7 @@ always_comb begin
             if (ss) begin
                 state_nxt        = IDLE;
                 bits_counter_nxt = 4'b0;
-            end
-            else begin
+            end else begin
                 state_nxt        = TRANSMISSION;
                 bits_counter_nxt = sck_rising_edge ? bits_counter + 1 : bits_counter;
             end
@@ -123,8 +121,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         rx_data   <= 8'b0;
         tx_buffer <= 8'b0;
         rx_buffer <= 8'b0;
-    end
-    else begin
+    end else begin
         miso      <= miso_nxt;
         rx_data   <= rx_data_nxt;
         tx_buffer <= tx_buffer_nxt;
@@ -147,13 +144,11 @@ always_comb begin
                 if (bits_counter == 0) begin
                     miso_nxt      = tx_data[7];
                     tx_buffer_nxt = {tx_data[6:0], 1'b0};
-                end
-                else begin
+                end else begin
                     miso_nxt      = tx_buffer[7];
                     tx_buffer_nxt = {tx_buffer[6:0], 1'b0};
                 end
-            end
-            else if (sck_falling_edge) begin
+            end else if (sck_falling_edge) begin
                 rx_buffer_nxt = {rx_buffer[6:0], mosi};
                 if (bits_counter == 8)
                     rx_data_nxt = {rx_buffer[6:0], mosi};

@@ -50,15 +50,13 @@ always_ff @(posedge clk or negedge rst_n or negedge pmcc_rst_n) begin
         full <= 1'b0;
         empty <= 1'b1;
         elements_counter <= 4'b0;
-    end
-    else begin
+    end else begin
         if (push && !full) begin
             mem[elements_counter] <= wdata;
             elements_counter <= elements_counter + 1;
             full <= (elements_counter == 9);
             empty <= 1'b0;
-        end
-        else if (pop && !empty) begin
+        end else if (pop && !empty) begin
             rdata <= mem[elements_counter - 1];
             elements_counter <= elements_counter - 1;
             full <= 1'b0;

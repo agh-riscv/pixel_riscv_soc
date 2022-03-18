@@ -17,17 +17,24 @@
 
 interface soc_pm_digital_config;
 
-logic [23:0] res;   /* digital_config[31:8]:  the reserved bits */
-logic [7:0]  th;    /* digital_config[7:0]:   the threshold */
+logic [25:0] res;
+logic [2:0]  num_bit_sel;
+logic        lc_mode, limit_enable, sample_mode;
 
 modport master (
     output res,
-    output th
+    output num_bit_sel,
+    output lc_mode,
+    output limit_enable,
+    output sample_mode
 );
 
 modport slave (
     input res,
-    input th
+    input num_bit_sel,
+    input lc_mode,
+    input limit_enable,
+    input sample_mode
 );
 
 endinterface

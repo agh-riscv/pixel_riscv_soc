@@ -17,13 +17,45 @@
 
 interface soc_pm_analog_config;
 
-logic [127:0] res;  /* analog_config[127:0]:  the reserved bits */
+logic [37:0] res;
+logic [7:0]  th_high, th_low;
+logic [6:0]  ikrum, vblr;
+logic [5:0]  fed_csa, idiscr, ref_csa_in, ref_csa_mid, ref_csa_out, ref_dac, ref_dac_base,
+             ref_dac_krum, shift_high, shift_low;
 
 modport master (
+    output fed_csa,
+    output idiscr,
+    output ikrum,
+    output ref_csa_in,
+    output ref_csa_mid,
+    output ref_csa_out,
+    output ref_dac,
+    output ref_dac_base,
+    output ref_dac_krum,
+    output shift_high,
+    output shift_low,
+    output th_high,
+    output th_low,
+    output vblr,
     output res
 );
 
 modport slave (
+    input fed_csa,
+    input idiscr,
+    input ikrum,
+    input ref_csa_in,
+    input ref_csa_mid,
+    input ref_csa_out,
+    input ref_dac,
+    input ref_dac_base,
+    input ref_dac_krum,
+    input shift_high,
+    input shift_low,
+    input th_high,
+    input th_low,
+    input vblr,
     input res
 );
 

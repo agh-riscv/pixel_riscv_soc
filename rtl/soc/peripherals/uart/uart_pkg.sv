@@ -22,11 +22,13 @@ package uart_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define UART_CR_OFFSET      12'h000     /* Control Reg offset */
-`define UART_SR_OFFSET      12'h004     /* Status Reg offset */
-`define UART_TDR_OFFSET     12'h008     /* Transmitter Data Reg offset */
-`define UART_RDR_OFFSET     12'h00c     /* Receiver Data Reg offset */
-`define UART_CDR_OFFSET     12'h010     /* Clock Divider Reg offset */
+const logic [11:0] UART_CR_OFFSET = 12'h000,    /* Control Reg offset */
+                   UART_SR_OFFSET = 12'h004,    /* Status Reg offset */
+                   UART_TDR_OFFSET = 12'h008,   /* Transmitter Data Reg offset */
+                   UART_RDR_OFFSET = 12'h00c,   /* Receiver Data Reg offset */
+                   UART_CDR_OFFSET = 12'h010,   /* Clock Divider Reg offset */
+                   UART_IER_OFFSET = 12'h014,   /* Interrupt Enable Reg offset */
+                   UART_ISR_OFFSET = 12'h018;   /* Interrupt Status Reg offset */
 
 
 /**
@@ -61,11 +63,25 @@ typedef struct packed {
 } uart_cdr_t;
 
 typedef struct packed {
+    logic [29:0] res;
+    logic        txactie;
+    logic        rxneie;
+} uart_ier_t;
+
+typedef struct packed {
+    logic [29:0] res;
+    logic        txactf;
+    logic        rxnef;
+} uart_isr_t;
+
+typedef struct packed {
     uart_cr_t  cr;
     uart_sr_t  sr;
     uart_tdr_t tdr;
     uart_rdr_t rdr;
     uart_cdr_t cdr;
+    uart_ier_t ier;
+    uart_isr_t isr;
 } uart_regs_t;
 
 endpackage

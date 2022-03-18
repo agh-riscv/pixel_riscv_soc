@@ -22,15 +22,12 @@ package gpio_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define GPIO_CR_OFFSET      12'h000     /* Control Reg offset */
-`define GPIO_SR_OFFSET      12'h004     /* Status Reg offset */
-`define GPIO_ODR_OFFSET     12'h008     /* Output Data Reg offset */
-`define GPIO_IDR_OFFSET     12'h00c     /* Input Data Reg offset */
-`define GPIO_IER_OFFSET     12'h010     /* Interrupt Enable Reg offset */
-`define GPIO_ISR_OFFSET     12'h014     /* Interrupt Status Reg offset */
-`define GPIO_RIER_OFFSET    12'h018     /* Rising-edge Interrupt Enable Reg offset */
-`define GPIO_FIER_OFFSET    12'h01c     /* Falling-edge Interrupt Enable Reg offset */
-`define GPIO_OENR_OFFSET    12'h020     /* Output Enable Reg offset */
+const logic [11:0] GPIO_ODR_OFFSET = 12'h000,   /* Output Data Reg offset */
+                   GPIO_IDR_OFFSET = 12'h004,   /* Input Data Reg offset */
+                   GPIO_RIER_OFFSET = 12'h008,  /* Rising-edge Interrupt Enable Reg offset */
+                   GPIO_RISR_OFFSET = 12'h00c,  /* Rising-edge Interrupt Status Reg offset */
+                   GPIO_FIER_OFFSET = 12'h010,  /* Falling-edge Interrupt Enable Reg offset */
+                   GPIO_FISR_OFFSET = 12'h014;  /* Falling-edge Interrupt Status Reg offset */
 
 
 /**
@@ -38,51 +35,12 @@ package gpio_pkg;
  */
 
 typedef struct packed {
-    logic [31:0] res;
-} gpio_cr_t;
-
-typedef struct packed {
-    logic [31:0] res;
-} gpio_sr_t;
-
-typedef struct packed {
-    logic [31:0] data;
-} gpio_odr_t;
-
-typedef struct packed {
-    logic [31:0] data;
-} gpio_idr_t;
-
-typedef struct packed {
-    logic [31:0] data;
-} gpio_ier_t;
-
-typedef struct packed {
-    logic [31:0] data;
-} gpio_isr_t;
-
-typedef struct packed {
-    logic [31:0] data;
-} gpio_rier_t;
-
-typedef struct packed {
-    logic [31:0] data;
-} gpio_fier_t;
-
-typedef struct packed {
-    logic [31:0] data;
-} gpio_oenr_t;
-
-typedef struct packed {
-    gpio_cr_t   cr;
-    gpio_sr_t   sr;
-    gpio_odr_t  odr;
-    gpio_idr_t  idr;
-    gpio_ier_t  ier;
-    gpio_isr_t  isr;
-    gpio_rier_t rier;
-    gpio_fier_t fier;
-    gpio_oenr_t oenr;
+    logic [31:0] odr;
+    logic [31:0] idr;
+    logic [31:0] rier;
+    logic [31:0] risr;
+    logic [31:0] fier;
+    logic [31:0] fisr;
 } gpio_regs_t;
 
 endpackage

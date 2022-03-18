@@ -38,46 +38,55 @@ typedef enum logic [1:0] {
     WAITING_FOR_RESPONSE
 } state_t;
 
-typedef enum logic [1:0] {
-    BOOT_ROM,
-    CODE_RAM,
-    INCORRECT
-} slave_t;
-
 
 /**
  * Local variables and signals
  */
 
-state_t state, state_nxt;
-slave_t responding_slave, responding_slave_nxt;
+state_t      state, state_nxt;
+logic [31:0] requested_addr, requested_addr_nxt;
 
 
 /**
  * Tasks and functions definitions
  */
 
-`define set_instr_bus_slave_active(bus) \
+`define attach_core_instr_bus_to_slave(bus) \
     bus.req = core_instr_bus.req; \
     bus.addr = core_instr_bus.addr
 
-`define set_instr_bus_slave_inactive(bus) \
+`define attach_zeros_to_slave_instr_bus(bus) \
     bus.req = 1'b0; \
     bus.addr = 32'b0
 
-`define attach_instr_bus_slave(bus) \
+`define attach_slave_instr_bus_to_core(bus) \
     core_instr_bus.gnt = bus.gnt; \
     core_instr_bus.rvalid = bus.rvalid; \
     core_instr_bus.rdata = bus.rdata; \
     core_instr_bus.rdata_intg = bus.rdata_intg; \
     core_instr_bus.err = bus.err
 
+function automatic logic is_address_valid(logic [31:0] address);
+    return address inside {
+        [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS],
+        [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]
+    };
+endfunction
+
+
+/**
+ * Properties and assertions
+ */
+
+assert property (@(negedge clk) core_instr_bus.req |-> is_address_valid(core_instr_bus.addr)) else
+    $warning("incorrect address requested: 0x%x", core_instr_bus.addr);
+
 
 /**
  * Module internal logic
  */
 
-/* state control */
+/* core state control */
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
@@ -105,22 +114,22 @@ always_comb begin
     endcase
 end
 
-/* input signals demultiplexing */
+/* core input signals demultiplexing */
 
 always_comb begin
-    `set_instr_bus_slave_inactive(boot_rom_instr_bus);
-    `set_instr_bus_slave_inactive(code_ram_instr_bus);
+    `attach_zeros_to_slave_instr_bus(boot_rom_instr_bus);
+    `attach_zeros_to_slave_instr_bus(code_ram_instr_bus);
 
     case (state)
     IDLE,
     WAITING_FOR_GRANT: begin
         if (core_instr_bus.req) begin
             case (core_instr_bus.addr) inside
-            `BOOT_ROM_ADDRESS_SPACE: begin
-                `set_instr_bus_slave_active(boot_rom_instr_bus);
+            [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+                `attach_core_instr_bus_to_slave(boot_rom_instr_bus);
             end
-            `CODE_RAM_ADDRESS_SPACE: begin
-                `set_instr_bus_slave_active(code_ram_instr_bus);
+            [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+                `attach_core_instr_bus_to_slave(code_ram_instr_bus);
             end
             endcase
         end
@@ -133,13 +142,13 @@ end
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
-        responding_slave <= INCORRECT;
+        requested_addr <= 32'b0;
     else
-        responding_slave <= responding_slave_nxt;
+        requested_addr <= requested_addr_nxt;
 end
 
 always_comb begin
-    responding_slave_nxt = responding_slave;
+    requested_addr_nxt = requested_addr;
     core_instr_bus.gnt = 1'b0;
     core_instr_bus.rvalid = 1'b0;
     core_instr_bus.rdata = 32'b0;
@@ -149,44 +158,38 @@ always_comb begin
     case (state)
     IDLE: begin
         if (core_instr_bus.req) begin
+            core_instr_bus.gnt = 1'b1;
+            requested_addr_nxt = core_instr_bus.addr;
+
             case (core_instr_bus.addr) inside
-            `BOOT_ROM_ADDRESS_SPACE: begin
-                responding_slave_nxt = BOOT_ROM;
-                `attach_instr_bus_slave(boot_rom_instr_bus);
+            [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+                `attach_slave_instr_bus_to_core(boot_rom_instr_bus);
             end
-            `CODE_RAM_ADDRESS_SPACE: begin
-                responding_slave_nxt = CODE_RAM;
-                `attach_instr_bus_slave(code_ram_instr_bus);
-            end
-            default: begin
-                responding_slave_nxt = INCORRECT;
-                core_instr_bus.gnt = 1'b1;
+            [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+                `attach_slave_instr_bus_to_core(code_ram_instr_bus);
             end
             endcase
         end
     end
     WAITING_FOR_GRANT: begin
-        case (responding_slave)
-        BOOT_ROM: begin
-            `attach_instr_bus_slave(boot_rom_instr_bus);
+        case (requested_addr) inside
+        [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+            `attach_slave_instr_bus_to_core(boot_rom_instr_bus);
         end
-        CODE_RAM: begin
-            `attach_instr_bus_slave(code_ram_instr_bus);
-        end
-        INCORRECT: begin
-            core_instr_bus.gnt = 1'b1;
+        [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+            `attach_slave_instr_bus_to_core(code_ram_instr_bus);
         end
         endcase
     end
     WAITING_FOR_RESPONSE: begin
-        case (responding_slave)
-        BOOT_ROM: begin
-            `attach_instr_bus_slave(boot_rom_instr_bus);
+        case (requested_addr) inside
+        [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+            `attach_slave_instr_bus_to_core(boot_rom_instr_bus);
         end
-        CODE_RAM: begin
-            `attach_instr_bus_slave(code_ram_instr_bus);
+        [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+            `attach_slave_instr_bus_to_core(code_ram_instr_bus);
         end
-        INCORRECT: begin
+        default: begin
             core_instr_bus.rvalid = 1'b1;
             core_instr_bus.err = 1'b1;
         end

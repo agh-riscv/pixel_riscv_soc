@@ -16,14 +16,14 @@
  */
 
 module pmcc (
-    output logic [9:0]     pc_if,
-    output logic           waitt,
-    input logic            clk,
-    input logic            rst_n,
-    input logic            pmcc_rst_n,
-    input logic            trigger,
-    input logic [31:0]     instr,
-    soc_pmc_pm_ctrl.master pmc_pm_ctrl
+    output logic [7:0] pc_if,
+    output logic       waitt,
+    input logic        clk,
+    input logic        rst_n,
+    input logic        pmcc_rst_n,
+    input logic        trigger,
+    input logic [31:0] instr,
+    soc_pm_ctrl.master pm_ctrl
 );
 
 
@@ -31,7 +31,8 @@ module pmcc (
  * Local variables and signals
  */
 
-logic [9:0] pc_id, branch_dst;
+logic [9:0] branch_dst;
+logic [7:0] pc_id;
 logic [1:0] instr_size;
 logic       store, branch, loop, jump, waiting, branch_exec;
 
@@ -56,7 +57,7 @@ pmcc_matrix_controller u_pmcc_matrix_controller (
     .pmcc_rst_n,
     .store,
     .instr,
-    .pmc_pm_ctrl
+    .pm_ctrl
 );
 
 pmcc_loop_controller u_pmcc_loop_controller (
@@ -85,17 +86,17 @@ pmcc_wait_controller u_pmcc_wait_controller (
 
 always_ff @(posedge clk or negedge rst_n or negedge pmcc_rst_n) begin
     if (!rst_n || !pmcc_rst_n)
-        pc_id <= 10'b0;
+        pc_id <= 8'b0;
     else
         pc_id <= pc_if;
 end
 
 always_comb begin
     case ({rst_n & pmcc_rst_n, waiting, jump, branch_exec}) inside
-    4'b0???:    pc_if = 10'b0;
+    4'b0???:    pc_if = 8'b0;
     4'b11??:    pc_if = pc_id;
-    4'b101?:    pc_if = {instr[5:0], instr[15:8]};
-    4'b1001:    pc_if = branch_dst;
+    4'b101?:    pc_if = instr[15:8];
+    4'b1001:    pc_if = branch_dst[7:0];
     4'b1000:    pc_if = pc_id + instr_size + 1;
     endcase
 end

@@ -27,7 +27,7 @@ module pmcc_loop_controller (
     input logic        branch,
     input logic [1:0]  instr_size,
     input logic [31:0] instr,
-    input logic [9:0]  pc
+    input logic [7:0]  pc
 );
 
 
@@ -75,8 +75,7 @@ always_ff @(posedge clk or negedge rst_n or negedge pmcc_rst_n) begin
         active_loop.iterations <= 14'b0;
         loop_execution <= 1'b0;
         lifo_readout <= 1'b0;
-    end
-    else begin
+    end else begin
         active_loop <= active_loop_nxt;
         loop_execution <= loop_execution_nxt;
         lifo_readout <= lifo_readout_nxt;
@@ -103,62 +102,52 @@ always_comb begin
                 if (loop_execution) begin
                     lifo_wdata = active_loop;
                     lifo_push = 1'b1;
-                end
-                else begin
+                end else begin
                     loop_execution_nxt = 1'b1;
                 end
             end
-        end
-        else if (branch) begin
+        end else if (branch) begin
             if (loop_execution) begin
                 if (active_loop.iterations) begin
                     branch_dst = active_loop.start_address;
                     branch_exec = 1'b1;
                     active_loop_nxt.iterations = active_loop.iterations - 1;
-                end
-                else begin
+                end else begin
                     if (!lifo_empty) begin
                         lifo_pop = 1'b1;
                         lifo_readout_nxt = 1'b1;
-                    end
-                    else begin
+                    end else begin
                         loop_execution_nxt = 1'b0;
                     end
                 end
             end
         end
-    end
-    else begin
+    end else begin
         if (branch) begin
             if (lifo_rdata.iterations) begin
                 branch_dst = lifo_rdata.start_address;
                 branch_exec = 1'b1;
                 active_loop_nxt.start_address = lifo_rdata.start_address;
                 active_loop_nxt.iterations = lifo_rdata.iterations - 1;
-            end
-            else begin
+            end else begin
                 if (!lifo_empty) begin
                     lifo_pop = 1'b1;
                     lifo_readout_nxt = 1'b1;
-                end
-                else begin
+                end else begin
                     loop_execution_nxt = 1'b0;
                 end
             end
-        end
-        else if (loop) begin
+        end else if (loop) begin
             if (iterations) begin
                 active_loop_nxt.start_address = pc + instr_size + 1;
                 active_loop_nxt.iterations = iterations - 1;
                 lifo_wdata = lifo_rdata;
                 lifo_push = 1'b1;
-            end
-            else begin
+            end else begin
                 active_loop_nxt.start_address = lifo_rdata.start_address;
                 active_loop_nxt.iterations = lifo_rdata.iterations - 1;
             end
-        end
-        else begin
+        end else begin
             active_loop_nxt.start_address = lifo_rdata.start_address;
             active_loop_nxt.iterations = lifo_rdata.iterations - 1;
         end

@@ -12,7 +12,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 set(app "command_interpreter" CACHE STRING "")
 set(target "sim" CACHE STRING "")
 
-project(riscv_xray_detector VERSION 1.0.0 LANGUAGES CXX ASM)
+project(pixel_riscv_soc VERSION 1.0.0 LANGUAGES CXX ASM)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -fno-common \
@@ -21,7 +21,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
     -fno-rtti \
     -fno-use-cxa-atexit \
     -fvisibility=hidden \
-    -march=rv32imcb \
+    -march=rv32imc \
     -mabi=ilp32 \
     -mcmodel=medany \
     -nostdlib \
@@ -37,6 +37,8 @@ elseif (${target} STREQUAL "asic")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DASIC")
 elseif (${target} STREQUAL "basys")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBASYS")
+elseif (${target} STREQUAL "kintex")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DKINTEX")
 elseif (${target} STREQUAL "sim")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIM")
 else()
@@ -44,11 +46,11 @@ else()
     return()
 endif()
 
-if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/${app}")
+if (NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/apps/${app}")
     message(SEND_ERROR "Incorrect application: ${app}")
     return()
 endif()
 
-add_subdirectory(${app})
+add_subdirectory(apps/${app})
 add_subdirectory(bootloader)
 add_subdirectory(libs)

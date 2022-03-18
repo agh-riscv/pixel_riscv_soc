@@ -21,6 +21,7 @@ module spi (
     input logic         clk,
     input logic         rst_n,
     ibex_data_bus.slave data_bus,
+    output logic        irq,
     soc_spi_bus.master  spi_bus
 );
 
@@ -29,9 +30,14 @@ module spi (
  * Local variables and signals
  */
 
-spi_regs_t  spi_regs, spi_regs_nxt;
-logic [7:0] rx_data;
-logic       busy, tx_data_valid, rx_data_valid, clk_divider_valid;
+spi_regs_t  regs, regs_nxt;
+
+logic       clk_divider_valid;
+
+logic [7:0] rx_fifo_rdata;
+logic       rx_fifo_full, rx_fifo_empty, rx_fifo_pop,
+            tx_fifo_full, tx_fifo_empty, tx_fifo_push,
+            txfe_irq;
 
 
 /**
@@ -40,27 +46,39 @@ logic       busy, tx_data_valid, rx_data_valid, clk_divider_valid;
 
 assign data_bus.rdata_intg = 7'b0;
 
+assign irq = txfe_irq;
+assign txfe_irq = regs.ier.txfeie & regs.isr.txfef;
+
 
 /**
  * Submodules placement
  */
 
 spi_master u_spi_master (
-    .ss(spi_bus.ss),
-    .sck(spi_bus.sck),
-    .mosi(spi_bus.mosi),
-    .busy,
-    .rx_data_valid,
-    .rx_data,
     .clk,
     .rst_n,
-    .tx_data_valid,
-    .tx_data(spi_regs.tdr.data),
-    .clk_divider_valid,
-    .clk_divider(spi_regs.cdr.data),
+
+    .ss0(spi_bus.ss0),
+    .ss1(spi_bus.ss1),
+    .sck(spi_bus.sck),
+    .mosi(spi_bus.mosi),
     .miso(spi_bus.miso),
-    .cpol(spi_regs.cr.cpol),
-    .cpha(spi_regs.cr.cpha)
+
+    .clk_divider(regs.cdr.data),
+    .clk_divider_valid,
+    .active_ss(regs.cr.active_ss),
+    .cpol(regs.cr.cpol),
+    .cpha(regs.cr.cpha),
+
+    .rx_fifo_full,
+    .rx_fifo_empty,
+    .rx_fifo_rdata,
+    .rx_fifo_pop,
+
+    .tx_fifo_full,
+    .tx_fifo_empty,
+    .tx_fifo_wdata(regs.tdr.data),
+    .tx_fifo_push
 );
 
 
@@ -70,7 +88,8 @@ spi_master u_spi_master (
 
 function automatic logic is_offset_valid(logic [11:0] offset);
     return offset inside {
-        `SPI_CR_OFFSET, `SPI_SR_OFFSET, `SPI_TDR_OFFSET, `SPI_RDR_OFFSET, `SPI_CDR_OFFSET
+        SPI_CR_OFFSET, SPI_SR_OFFSET, SPI_TDR_OFFSET, SPI_RDR_OFFSET, SPI_CDR_OFFSET,
+        SPI_IER_OFFSET, SPI_ISR_OFFSET
     };
 endfunction
 
@@ -81,6 +100,14 @@ endfunction
 function automatic logic is_reg_read(logic [11:0] offset);
     return data_bus.req && data_bus.addr[11:0] == offset;
 endfunction
+
+
+/**
+ * Properties and assertions
+ */
+
+assert property (@(negedge clk) data_bus.req |-> is_offset_valid(data_bus.addr[11:0])) else
+    $warning("incorrect offset requested: 0x%x", data_bus.addr[11:0]);
 
 
 /**
@@ -97,8 +124,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rvalid <= 1'b0;
         data_bus.err <= 1'b0;
-    end
-    else begin
+    end else begin
         data_bus.rvalid <= data_bus.gnt;
         data_bus.err <= data_bus.gnt && !is_offset_valid(data_bus.addr[11:0]);
     end
@@ -108,41 +134,45 @@ end
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        spi_regs <= {{5{32'b0}}};
-        tx_data_valid <= 1'b0;
+        regs <= {{7{32'b0}}};
         clk_divider_valid <= 1'b0;
-    end
-    else begin
-        spi_regs <= spi_regs_nxt;
-        tx_data_valid <= is_reg_written(`SPI_TDR_OFFSET);
-        clk_divider_valid <= is_reg_written(`SPI_CDR_OFFSET);
+        tx_fifo_push <= 1'b0;
+    end else begin
+        regs <= regs_nxt;
+        clk_divider_valid <= is_reg_written(SPI_CDR_OFFSET);
+        tx_fifo_push <= is_reg_written(SPI_TDR_OFFSET);
     end
 end
 
 always_comb begin
-    spi_regs_nxt = spi_regs;
+    regs_nxt = regs;
 
     if (data_bus.req && data_bus.we) begin
         case (data_bus.addr[11:0])
-        `SPI_CR_OFFSET:     spi_regs_nxt.cr = data_bus.wdata;
-        `SPI_SR_OFFSET:     spi_regs_nxt.sr = data_bus.wdata;
-        `SPI_TDR_OFFSET:    spi_regs_nxt.tdr = data_bus.wdata;
-        `SPI_RDR_OFFSET:    spi_regs_nxt.rdr = data_bus.wdata;
-        `SPI_CDR_OFFSET:    spi_regs_nxt.cdr = data_bus.wdata;
+        SPI_CR_OFFSET:      regs_nxt.cr = data_bus.wdata;
+        SPI_SR_OFFSET:      regs_nxt.sr = data_bus.wdata;
+        SPI_TDR_OFFSET:     regs_nxt.tdr = data_bus.wdata;
+        SPI_RDR_OFFSET:     regs_nxt.rdr = data_bus.wdata;
+        SPI_CDR_OFFSET:     regs_nxt.cdr = data_bus.wdata;
+        SPI_IER_OFFSET:     regs_nxt.ier = data_bus.wdata;
+        SPI_ISR_OFFSET:     regs_nxt.isr = data_bus.wdata;
         endcase
     end
 
-    /* 0x04: status reg */
-    spi_regs_nxt.sr.txact = busy;
+    rx_fifo_pop = is_reg_read(SPI_RDR_OFFSET);
 
-    if (rx_data_valid)
-        spi_regs_nxt.sr.rxne = 1'b1;
-    else if (is_reg_read(`SPI_RDR_OFFSET))
-        spi_regs_nxt.sr.rxne = 1'b0;
+    /* 0x004: status reg */
+    regs_nxt.sr.tx_fifo_empty = tx_fifo_empty;
+    regs_nxt.sr.tx_fifo_full = tx_fifo_full;
+    regs_nxt.sr.rx_fifo_empty = rx_fifo_empty;
+    regs_nxt.sr.rx_fifo_full = rx_fifo_full;
 
     /* 0x00c: receiver data reg */
-    if (rx_data_valid)
-        spi_regs_nxt.rdr.data = rx_data;
+    regs_nxt.rdr.data = rx_fifo_rdata;
+
+    /* 0x018: interrupt status reg */
+    if (!regs.sr.tx_fifo_empty && regs_nxt.sr.tx_fifo_empty)
+        regs_nxt.isr.txfef = 1'b1;
 end
 
 /* Registers readout */
@@ -150,15 +180,16 @@ end
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rdata <= 32'b0;
-    end
-    else begin
+    end else begin
         if (data_bus.req) begin
             case (data_bus.addr[11:0])
-            `SPI_CR_OFFSET:     data_bus.rdata <= spi_regs.cr;
-            `SPI_SR_OFFSET:     data_bus.rdata <= spi_regs.sr;
-            `SPI_TDR_OFFSET:    data_bus.rdata <= spi_regs.tdr;
-            `SPI_RDR_OFFSET:    data_bus.rdata <= spi_regs.rdr;
-            `SPI_CDR_OFFSET:    data_bus.rdata <= spi_regs.cdr;
+            SPI_CR_OFFSET:      data_bus.rdata <= regs.cr;
+            SPI_SR_OFFSET:      data_bus.rdata <= regs.sr;
+            SPI_TDR_OFFSET:     data_bus.rdata <= regs.tdr;
+            SPI_RDR_OFFSET:     data_bus.rdata <= regs.rdr;
+            SPI_CDR_OFFSET:     data_bus.rdata <= regs.cdr;
+            SPI_IER_OFFSET:     data_bus.rdata <= regs.ier;
+            SPI_ISR_OFFSET:     data_bus.rdata <= regs.isr;
             endcase
         end
     end

@@ -110,8 +110,7 @@ end
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         addr <= 32'b0;
-    end
-    else begin
+    end else begin
         case (state)
         IDLE: begin
             if (data_bus.req)
@@ -131,8 +130,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         data_bus.rdata <= 32'b0;
         instr_bus.rvalid <= 1'b0;
         instr_bus.rdata <= 32'b0;
-    end
-    else begin
+    end else begin
         case (state)
         IDLE: begin
             data_bus.rvalid <= 1'b0;

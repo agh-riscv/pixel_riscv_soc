@@ -19,7 +19,7 @@ module pmcc_code_ram (
     output logic [31:0] instr,
     input logic         clk,
     input logic         rst_n,
-    input logic [9:0]   pc_if,
+    input logic [7:0]   pc_if,
     ibex_data_bus.slave data_bus
 );
 
@@ -43,7 +43,7 @@ pmcc_dpram u_pmcc_dpram (
     .clk,
     .req_a(data_bus.req),
     .addr_a(data_bus.addr),
-    .addr_b({22'b0, pc_if}),
+    .addr_b({24'b0, pc_if}),
     .we_a(data_bus.we),
     .be_a(data_bus.be),
     .wdata_a(data_bus.wdata)

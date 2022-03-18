@@ -17,21 +17,16 @@
 
 interface soc_gpio_bus;
 
-logic [31:0] dout, din, oe_n;
-logic        irq;
+logic [31:0] dout, din;
 
 modport master (
-    output oe_n,
     output dout,
-    output irq,
     input  din
 );
 
 modport slave (
     output din,
-    input  oe_n,
-    input  dout,
-    input  irq
+    input  dout
 );
 
 endinterface

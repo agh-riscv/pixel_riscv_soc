@@ -16,33 +16,13 @@
  */
 
 module pmcc_matrix_controller (
-    input logic            clk,
-    input logic            rst_n,
-    input logic            pmcc_rst_n,
-    input logic            store,
-    input logic [31:0]     instr,
-    soc_pmc_pm_ctrl.master pmc_pm_ctrl
+    input logic        clk,
+    input logic        rst_n,
+    input logic        pmcc_rst_n,
+    input logic        store,
+    input logic [31:0] instr,
+    soc_pm_ctrl.master pm_ctrl
 );
-
-
-/**
- * Local variables and signals
- */
-
-logic [15:0] matrix_ctrl;
-
-
-/**
- * Signals assignments
- */
-
-assign pmc_pm_ctrl.res = matrix_ctrl[15:6];
-assign pmc_pm_ctrl.store = matrix_ctrl[5];
-assign pmc_pm_ctrl.strobe = matrix_ctrl[4];
-assign pmc_pm_ctrl.gate = matrix_ctrl[3];
-assign pmc_pm_ctrl.sh_b = matrix_ctrl[2];
-assign pmc_pm_ctrl.sh_a = matrix_ctrl[1];
-assign pmc_pm_ctrl.clk_sh = matrix_ctrl[0];
 
 
 /**
@@ -50,10 +30,23 @@ assign pmc_pm_ctrl.clk_sh = matrix_ctrl[0];
  */
 
 always_ff @(posedge clk or negedge rst_n or negedge pmcc_rst_n) begin
-    if (!rst_n || !pmcc_rst_n)
-        matrix_ctrl <= 16'b0;
-    else
-        matrix_ctrl <= store ? instr[23:8] : matrix_ctrl;
+    if (!rst_n || !pmcc_rst_n) begin
+        pm_ctrl.store <= 32'b0;
+        pm_ctrl.strobe <= 32'b0;
+        pm_ctrl.gate <= 32'b0;
+        pm_ctrl.sh_b <= 32'b0;
+        pm_ctrl.sh_a <= 32'b0;
+        pm_ctrl.clk_sh <= 32'b0;
+    end else begin
+        if (store) begin
+            pm_ctrl.store <= {32{instr[13]}};
+            pm_ctrl.strobe <= {32{instr[12]}};
+            pm_ctrl.gate <= {32{instr[11]}};
+            pm_ctrl.sh_b <= {32{instr[10]}};
+            pm_ctrl.sh_a <= {32{instr[9]}};
+            pm_ctrl.clk_sh <= {32{instr[8]}};
+        end
+    end
 end
 
 endmodule

@@ -17,10 +17,11 @@
 
 interface soc_spi_bus;
 
-logic ss, sck, mosi, miso;
+logic ss0, ss1, sck, mosi, miso;
 
 modport master (
-    output ss,
+    output ss0,
+    output ss1,
     output sck,
     output mosi,
     input  miso
@@ -28,7 +29,8 @@ modport master (
 
 modport slave (
     output miso,
-    input  ss,
+    input  ss0,
+    input  ss1,
     input  sck,
     input  mosi
 );

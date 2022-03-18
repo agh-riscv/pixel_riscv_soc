@@ -16,12 +16,12 @@
  */
 
 module pmc_transmitter (
-    output logic [31:0]      pm_din,
+    output logic [31:0]      pm_data_din,
     input logic              clk,
     input logic              rst_n,
     input logic              sh,
     input logic              pclk,
-    input logic [31:0][15:0] dout
+    input logic [31:0][15:0] wdata
 );
 
 
@@ -42,22 +42,22 @@ typedef enum logic [1:0] {
 
 state_t      state, state_nxt;
 logic [3:0]  bits_counter, bits_counter_nxt;
-logic [31:0] pm_din_nxt;
+logic [31:0] pm_data_din_nxt;
 
 
 /**
  * Tasks and functions definitions
  */
 
-function logic [31:0] get_bits_from_dout(input logic [3:0] index);
+function logic [31:0] get_bits_from_wdata(input logic [3:0] index);
     return {
-        dout[31][index], dout[30][index],
-        dout[29][index], dout[28][index], dout[27][index], dout[26][index], dout[25][index],
-        dout[24][index], dout[23][index], dout[22][index], dout[21][index], dout[20][index],
-        dout[19][index], dout[18][index], dout[17][index], dout[16][index], dout[15][index],
-        dout[14][index], dout[13][index], dout[12][index], dout[11][index], dout[10][index],
-        dout[9][index], dout[8][index], dout[7][index], dout[6][index], dout[5][index],
-        dout[4][index], dout[3][index], dout[2][index], dout[1][index], dout[0][index]
+        wdata[31][index], wdata[30][index],
+        wdata[29][index], wdata[28][index], wdata[27][index], wdata[26][index], wdata[25][index],
+        wdata[24][index], wdata[23][index], wdata[22][index], wdata[21][index], wdata[20][index],
+        wdata[19][index], wdata[18][index], wdata[17][index], wdata[16][index], wdata[15][index],
+        wdata[14][index], wdata[13][index], wdata[12][index], wdata[11][index], wdata[10][index],
+        wdata[9][index], wdata[8][index], wdata[7][index], wdata[6][index], wdata[5][index],
+        wdata[4][index], wdata[3][index], wdata[2][index], wdata[1][index], wdata[0][index]
     };
 endfunction
 
@@ -70,8 +70,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         state <= IDLE;
         bits_counter <= 4'b0;
-    end
-    else begin
+    end else begin
         state <= state_nxt;
         bits_counter <= bits_counter_nxt;
     end
@@ -90,8 +89,7 @@ always_comb begin
         if (pclk) begin
             state_nxt = ACTIVE;
             bits_counter_nxt = bits_counter + 1;
-        end
-        else if (!sh) begin
+        end else if (!sh) begin
             state_nxt = IDLE;
         end
     end
@@ -100,8 +98,7 @@ always_comb begin
             if (bits_counter == 15) begin
                 state_nxt = WAITING;
                 bits_counter_nxt = 0;
-            end
-            else begin
+            end else begin
                 bits_counter_nxt = bits_counter + 1;
             end
         end
@@ -111,24 +108,24 @@ end
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
-        pm_din <= 32'b0;
+        pm_data_din <= 32'b0;
     else
-        pm_din <= pm_din_nxt;
+        pm_data_din <= pm_data_din_nxt;
 end
 
 always_comb begin
-    pm_din_nxt = pm_din;
+    pm_data_din_nxt = pm_data_din;
 
     case (state)
     IDLE: begin
-        pm_din_nxt = get_bits_from_dout(15);
+        pm_data_din_nxt = get_bits_from_wdata(15);
     end
     WAITING: begin
-        pm_din_nxt = get_bits_from_dout(15);
+        pm_data_din_nxt = get_bits_from_wdata(15);
     end
     ACTIVE: begin
         if (!pclk)
-            pm_din_nxt = get_bits_from_dout(15 - bits_counter);
+            pm_data_din_nxt = get_bits_from_wdata(15 - bits_counter);
     end
     endcase
 end

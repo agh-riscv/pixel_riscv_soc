@@ -17,13 +17,31 @@
 
 package memory_map;
 
-`define BOOT_ROM_ADDRESS_SPACE 32'h0000_0???                /* 0x0000_0000 - 0x0000_0FFF (4 kB) */
-`define CODE_RAM_ADDRESS_SPACE {16'h0001, 4'b00??, 12'h???} /* 0x0001_0000 - 0x0001_3FFF (16 kB) */
-`define DATA_RAM_ADDRESS_SPACE {16'h0010, 4'b00??, 12'h???} /* 0x0010_0000 - 0x0010_3FFF (16 kB) */
-`define GPIO_ADDRESS_SPACE     32'h0100_0???                /* 0x0100_0000 - 0x0100_0FFF (4 kB) */
-`define SPI_ADDRESS_SPACE      32'h0100_1???                /* 0x0100_1000 - 0x0100_1FFF (4 kB) */
-`define UART_ADDRESS_SPACE     32'h0100_2???                /* 0x0100_2000 - 0x0100_2FFF (4 kB) */
-`define TIMER_ADDRESS_SPACE    32'h0100_3???                /* 0x0100_3000 - 0x0100_3FFF (4 kB) */
-`define PMC_ADDRESS_SPACE      32'h0101_????                /* 0x0101_0000 - 0x0101_FFFF (64 kB) */
+const logic [31:0] BOOT_ROM_BASE_ADDRESS = 32'h0000_0000,
+                   BOOT_ROM_END_ADDRESS = 32'h0000_1fff,
+
+                   CODE_RAM_BASE_ADDRESS = 32'h0001_0000,
+                   CODE_RAM_END_ADDRESS = 32'h0001_3fff,
+
+                   DATA_RAM_BASE_ADDRESS = 32'h0010_0000,
+                   DATA_RAM_END_ADDRESS = 32'h0010_3fff,
+
+                   IOMUX_BASE_ADDRESS = 32'h0100_0000,
+                   IOMUX_END_ADDRESS = 32'h0100_0fff,
+
+                   GPIO_BASE_ADDRESS = 32'h0100_1000,
+                   GPIO_END_ADDRESS = 32'h0100_1fff,
+
+                   UART_BASE_ADDRESS = 32'h0100_2000,
+                   UART_END_ADDRESS = 32'h0100_2fff,
+
+                   SPI_BASE_ADDRESS = 32'h0100_3000,
+                   SPI_END_ADDRESS = 32'h0100_3fff,
+
+                   TIMER_BASE_ADDRESS = 32'h0100_4000,
+                   TIMER_END_ADDRESS = 32'h0100_4fff,
+
+                   PMC_BASE_ADDRESS = 32'h0101_0000,
+                   PMC_END_ADDRESS = 32'h0101_ffff;
 
 endpackage

@@ -20,7 +20,7 @@ SEARCH_DIR(.)
 
 MEMORY
 {
-    boot_rom    : org = 0x00000000, len = 4k
+    boot_rom    : org = 0x00000000, len = 8k
     ram         : org = 0x00100000, len = 16k
 }
 

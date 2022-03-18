@@ -21,6 +21,7 @@ module gpio (
     input logic         clk,
     input logic         rst_n,
     ibex_data_bus.slave data_bus,
+    output logic        irq,
     soc_gpio_bus.master gpio_bus
 );
 
@@ -29,8 +30,8 @@ module gpio (
  * Local variables and signals
  */
 
-gpio_regs_t  gpio_regs, gpio_regs_nxt;
-logic [31:0] interrupt_detected;
+gpio_regs_t  regs, regs_nxt;
+logic [31:0] rising_edge_interrupt_detected, falling_edge_interrupt_detected;
 
 
 /**
@@ -39,28 +40,23 @@ logic [31:0] interrupt_detected;
 
 assign data_bus.rdata_intg = 7'b0;
 
-/* 0x008: output data reg */
-assign gpio_bus.dout = gpio_regs.odr;
+assign irq = (|regs.risr) | (|regs.fisr);
 
-/* 0x014: interrupt status reg */
-assign gpio_bus.irq =| gpio_regs.isr;
-
-/* 0x020: output enable reg */
-assign gpio_bus.oe_n = gpio_regs.oenr;
+/* 0x000: output data reg */
+assign gpio_bus.dout = regs.odr;
 
 
 /**
  * Submodules placement
  */
 
-gpio_interrupt_detector u_gpio_interrupt_detector (
-    .interrupt_detected,
+gpio_interrupts_detector u_gpio_interrupts_detector (
     .clk,
-    .rst_n,
-    .io_in(gpio_bus.din),
-    .ier(gpio_regs.ier),
-    .rier(gpio_regs.rier),
-    .fier(gpio_regs.fier)
+
+    .rising_edge_interrupt_detected,
+    .falling_edge_interrupt_detected,
+    .regs(regs),
+    .din(gpio_bus.din)
 );
 
 
@@ -70,14 +66,22 @@ gpio_interrupt_detector u_gpio_interrupt_detector (
 
 function automatic logic is_offset_valid(logic [11:0] offset);
     return offset inside {
-        `GPIO_CR_OFFSET, `GPIO_SR_OFFSET, `GPIO_ODR_OFFSET, `GPIO_IDR_OFFSET, `GPIO_IER_OFFSET,
-        `GPIO_ISR_OFFSET, `GPIO_RIER_OFFSET, `GPIO_FIER_OFFSET, `GPIO_OENR_OFFSET
+        GPIO_ODR_OFFSET, GPIO_IDR_OFFSET, GPIO_RIER_OFFSET, GPIO_RISR_OFFSET,
+        GPIO_FIER_OFFSET, GPIO_FISR_OFFSET
     };
 endfunction
 
 function automatic logic is_reg_written(logic [11:0] offset);
     return data_bus.req && data_bus.we && data_bus.addr[11:0] == offset;
 endfunction
+
+
+/**
+ * Properties and assertions
+ */
+
+assert property (@(negedge clk) data_bus.req |-> is_offset_valid(data_bus.addr[11:0])) else
+    $warning("incorrect offset requested: 0x%x", data_bus.addr[11:0]);
 
 
 /**
@@ -94,8 +98,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rvalid <= 1'b0;
         data_bus.err <= 1'b0;
-    end
-    else begin
+    end else begin
         data_bus.rvalid <= data_bus.gnt;
         data_bus.err <= data_bus.gnt && !is_offset_valid(data_bus.addr[11:0]);
     end
@@ -104,48 +107,47 @@ end
 /* Registers update */
 
 always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-        gpio_regs.cr <= 32'b0;
-        gpio_regs.sr <= 32'b0;
-        gpio_regs.odr <= 32'b0;
-        gpio_regs.idr <= 32'b0;
-        gpio_regs.ier <= 32'b0;
-        gpio_regs.isr <= 32'b0;
-        gpio_regs.rier <= 32'b0;
-        gpio_regs.fier <= 32'b0;
-        gpio_regs.oenr <= 32'hffffffff;
-    end
-    else begin
-        gpio_regs <= gpio_regs_nxt;
-    end
+    if (!rst_n)
+        regs <= {{6{32'b0}}};
+    else
+        regs <= regs_nxt;
 end
 
 always_comb begin
-    gpio_regs_nxt = gpio_regs;
+    regs_nxt = regs;
 
     if (data_bus.req && data_bus.we) begin
         case (data_bus.addr[11:0])
-        `GPIO_CR_OFFSET:    gpio_regs_nxt.cr = data_bus.wdata;
-        `GPIO_SR_OFFSET:    gpio_regs_nxt.sr = data_bus.wdata;
-        `GPIO_ODR_OFFSET:   gpio_regs_nxt.odr = data_bus.wdata;
-        `GPIO_IDR_OFFSET:   gpio_regs_nxt.idr = data_bus.wdata;
-        `GPIO_IER_OFFSET:   gpio_regs_nxt.ier = data_bus.wdata;
-        `GPIO_ISR_OFFSET:   gpio_regs_nxt.isr = data_bus.wdata;
-        `GPIO_RIER_OFFSET:  gpio_regs_nxt.rier = data_bus.wdata;
-        `GPIO_FIER_OFFSET:  gpio_regs_nxt.fier = data_bus.wdata;
-        `GPIO_OENR_OFFSET:  gpio_regs_nxt.oenr = data_bus.wdata;
+        GPIO_ODR_OFFSET:    regs_nxt.odr = data_bus.wdata;
+        GPIO_IDR_OFFSET:    regs_nxt.idr = data_bus.wdata;
+        GPIO_RIER_OFFSET:   regs_nxt.rier = data_bus.wdata;
+        GPIO_RISR_OFFSET:   regs_nxt.risr = data_bus.wdata;
+        GPIO_FIER_OFFSET:   regs_nxt.fier = data_bus.wdata;
+        GPIO_FISR_OFFSET:   regs_nxt.fisr = data_bus.wdata;
         endcase
     end
 
-    /* 0x00c: input data reg */
-    gpio_regs_nxt.idr = gpio_bus.din;
+    /* 0x004: input data reg */
+    regs_nxt.idr = gpio_bus.din;
 
-    /* 0x014: interrupt status reg */
-    if (interrupt_detected) begin
-        gpio_regs_nxt.isr = gpio_regs.isr | interrupt_detected;
+    /* 0x00c: rising-edge interrupt status reg */
+    for (int i = 0; i < 32; ++i) begin
+        if (rising_edge_interrupt_detected[i]) begin
+            if (is_reg_written(GPIO_RISR_OFFSET))
+                regs_nxt.risr[i] = data_bus.wdata[i] | 1'b1;
+            else
+                regs_nxt.risr[i] = 1'b1;
+        end
+    end
 
-        if (is_reg_written(`GPIO_ISR_OFFSET))
-            gpio_regs_nxt.isr = data_bus.wdata | interrupt_detected;
+    /* 0x014: falling-edge interrupt status reg */
+    for (int i = 0; i < 32; ++i) begin
+        if (falling_edge_interrupt_detected[i]) begin
+            if (is_reg_written(GPIO_FISR_OFFSET))
+                regs_nxt.fisr[i] = data_bus.wdata[i] | 1'b1;
+            else
+                regs_nxt.fisr[i] = 1'b1;
+        end
     end
 end
 
@@ -154,19 +156,15 @@ end
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rdata <= 32'b0;
-    end
-    else begin
+    end else begin
         if (data_bus.req) begin
             case (data_bus.addr[11:0])
-            `GPIO_CR_OFFSET:    data_bus.rdata <= gpio_regs.cr;
-            `GPIO_SR_OFFSET:    data_bus.rdata <= gpio_regs.sr;
-            `GPIO_ODR_OFFSET:   data_bus.rdata <= gpio_regs.odr;
-            `GPIO_IDR_OFFSET:   data_bus.rdata <= gpio_regs.idr;
-            `GPIO_IER_OFFSET:   data_bus.rdata <= gpio_regs.ier;
-            `GPIO_ISR_OFFSET:   data_bus.rdata <= gpio_regs.isr;
-            `GPIO_RIER_OFFSET:  data_bus.rdata <= gpio_regs.rier;
-            `GPIO_FIER_OFFSET:  data_bus.rdata <= gpio_regs.fier;
-            `GPIO_OENR_OFFSET:  data_bus.rdata <= gpio_regs.oenr;
+            GPIO_ODR_OFFSET:    data_bus.rdata <= regs.odr;
+            GPIO_IDR_OFFSET:    data_bus.rdata <= regs.idr;
+            GPIO_RIER_OFFSET:   data_bus.rdata <= regs.rier;
+            GPIO_RISR_OFFSET:   data_bus.rdata <= regs.risr;
+            GPIO_FIER_OFFSET:   data_bus.rdata <= regs.fier;
+            GPIO_FISR_OFFSET:   data_bus.rdata <= regs.fisr;
             endcase
         end
     end

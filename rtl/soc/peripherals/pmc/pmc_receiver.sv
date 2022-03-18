@@ -16,12 +16,12 @@
  */
 
 module pmc_receiver (
-    output logic [31:0][15:0] din,
+    output logic [31:0][15:0] rdata,
     input logic               clk,
     input logic               rst_n,
     input logic               sh,
     input logic               pclk,
-    input logic [31:0]        pm_dout
+    input logic [31:0]        pm_data_dout
 );
 
 
@@ -42,7 +42,7 @@ typedef enum logic [1:0] {
 
 state_t            state, state_nxt;
 logic [3:0]        bits_counter, bits_counter_nxt;
-logic [31:0][15:0] din_nxt;
+logic [31:0][15:0] rdata_nxt;
 
 
 /**
@@ -53,8 +53,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         state <= IDLE;
         bits_counter <= 4'b0;
-    end
-    else begin
+    end else begin
         state <= state_nxt;
         bits_counter <= bits_counter_nxt;
     end
@@ -73,8 +72,7 @@ always_comb begin
         if (pclk) begin
             state_nxt = ACTIVE;
             bits_counter_nxt = bits_counter + 1;
-        end
-        else if (!sh) begin
+        end else if (!sh) begin
             state_nxt = IDLE;
         end
     end
@@ -83,8 +81,7 @@ always_comb begin
             if (bits_counter == 15) begin
                 state_nxt = WAITING;
                 bits_counter_nxt = 0;
-            end
-            else begin
+            end else begin
                 bits_counter_nxt = bits_counter + 1;
             end
         end
@@ -94,26 +91,26 @@ end
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
-        din <= {16{32'b0}};
+        rdata <= {16{32'b0}};
     else
-        din <= din_nxt;
+        rdata <= rdata_nxt;
 end
 
 always_comb begin
-    din_nxt = din;
+    rdata_nxt = rdata;
 
     case (state)
     IDLE: ;
     WAITING: begin
         if (pclk) begin
             for (int i = 0; i < 32; ++i)
-                din_nxt[i][15] = pm_dout[i];
+                rdata_nxt[i][15] = pm_data_dout[i];
         end
     end
     ACTIVE: begin
         if (pclk) begin
             for (int i = 0; i < 32; ++i)
-                din_nxt[i][15-bits_counter] = pm_dout[i];
+                rdata_nxt[i][15-bits_counter] = pm_data_dout[i];
         end
     end
     endcase

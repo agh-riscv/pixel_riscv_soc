@@ -47,8 +47,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         falling_edge <= 1'b0;
         counter_target <= 8'b0;
         counter <= 8'b0;
-    end
-    else begin
+    end else begin
         sck <= sck_nxt;
         rising_edge <= rising_edge_nxt;
         falling_edge <= falling_edge_nxt;
@@ -66,8 +65,7 @@ always_comb begin
 
     if (clk_divider_valid) begin
         counter_target_nxt = clk_divider;
-    end
-    else if (en) begin
+    end else if (en) begin
         sck_nxt = sck;
         counter_nxt = counter + 1;
 
@@ -76,8 +74,7 @@ always_comb begin
             rising_edge_nxt = ~sck;
             falling_edge_nxt = sck;
             counter_nxt = 8'b0;
-        end
-        else if (counter == counter_target) begin
+        end else if (counter == counter_target) begin
             sck_nxt = ~sck;
             rising_edge_nxt = ~sck;
             falling_edge_nxt = sck;

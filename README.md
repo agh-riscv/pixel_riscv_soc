@@ -12,17 +12,10 @@ The SoC has been verified by simulations and FPGA-based prototype implementation
 
 ![System-on-Chip architecture](doc/img/soc_arch.svg?raw=true "System-on-Chip architecture")
 
-## X-ray detector calibration
-In order to estimate the SoC performance, the numbers of processor cycles consumed during the execution
-of the three detector-based algorithms were measured. Results of the measurements taken before
-and after the implementation of hardware accelerators (serializers) are presented in the table below.
-
-| Algorithm             | Software execution | Hardware accelerators usage | Ratio |
-|:---------------------:|:------------------:|:---------------------------:|:-----:|
-| Counters readout      |            253 040 |                       8 040 |  31.5 |
-| Configuration loading |            201 811 |                       8 345 |  24.2 |
-| Matrix calibration    |         54 873 510 |                   2 669 020 |  20.6 |
-
+## Bitstream generation
+```bash
+./tools/bitstream_generator.sh
+```
 
 ## Authors
 

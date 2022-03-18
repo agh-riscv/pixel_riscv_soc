@@ -25,10 +25,14 @@ module peripherals (
     ibex_data_bus.slave          timer_data_bus,
     ibex_data_bus.slave          uart_data_bus,
 
+    output logic                 gpio_irq,
+    output logic                 spi_irq,
+    output logic                 timer_irq,
+    output logic                 uart_irq,
+
     soc_gpio_bus.master          gpio_bus,
     soc_pmc_bus.master           pmc_bus,
     soc_spi_bus.master           spi_bus,
-    soc_timer_bus.master         timer_bus,
     soc_uart_bus.master          uart_bus,
 
     soc_pm_ctrl.master           pm_ctrl,
@@ -46,6 +50,7 @@ gpio u_gpio (
     .clk,
     .rst_n,
     .data_bus(gpio_data_bus),
+    .irq(gpio_irq),
     .gpio_bus
 );
 
@@ -64,6 +69,7 @@ spi u_spi (
     .clk,
     .rst_n,
     .data_bus(spi_data_bus),
+    .irq(spi_irq),
     .spi_bus
 );
 
@@ -71,13 +77,14 @@ timer u_timer (
     .clk,
     .rst_n,
     .data_bus(timer_data_bus),
-    .timer_bus
+    .irq(timer_irq)
 );
 
 uart u_uart (
     .clk,
     .rst_n,
     .data_bus(uart_data_bus),
+    .irq(uart_irq),
     .uart_bus
 );
 

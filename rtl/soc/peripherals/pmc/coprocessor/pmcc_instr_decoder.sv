@@ -71,10 +71,6 @@ always_comb begin
         instr_size = 2'b00;
         waitt = 1'b1;
     end
-    default: begin
-        instr_size = 2'b00;
-        waitt = 1'b1;
-    end
     endcase
 end
 

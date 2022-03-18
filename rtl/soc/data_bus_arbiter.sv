@@ -28,6 +28,7 @@ module data_bus_arbiter (
     ibex_data_bus.master data_ram_data_bus,
 
     ibex_data_bus.master gpio_data_bus,
+    ibex_data_bus.master iomux_data_bus,
     ibex_data_bus.master pmc_data_bus,
     ibex_data_bus.master spi_data_bus,
     ibex_data_bus.master timer_data_bus,
@@ -45,32 +46,20 @@ typedef enum logic [1:0] {
     WAITING_FOR_RESPONSE
 } state_t;
 
-typedef enum logic [3:0] {
-    BOOT_ROM,
-    CODE_RAM,
-    DATA_RAM,
-    GPIO,
-    SPI,
-    UART,
-    TIMER,
-    PMC,
-    INCORRECT
-} slave_t;
-
 
 /**
  * Local variables and signals
  */
 
-state_t state, state_nxt;
-slave_t responding_slave, responding_slave_nxt;
+state_t      state, state_nxt;
+logic [31:0] requested_addr, requested_addr_nxt;
 
 
 /**
  * Tasks and functions definitions
  */
 
-`define set_data_bus_slave_active(bus) \
+`define attach_core_data_bus_to_slave(bus) \
     bus.req = core_data_bus.req; \
     bus.we = core_data_bus.we; \
     bus.be = core_data_bus.be; \
@@ -78,7 +67,7 @@ slave_t responding_slave, responding_slave_nxt;
     bus.wdata = core_data_bus.wdata; \
     bus.wdata_intg = core_data_bus.wdata_intg
 
-`define set_data_bus_slave_inactive(bus) \
+`define attach_zeros_to_slave_data_bus(bus) \
     bus.req = 1'b0; \
     bus.we = 1'b0; \
     bus.be = 4'b0; \
@@ -86,12 +75,34 @@ slave_t responding_slave, responding_slave_nxt;
     bus.wdata = 32'b0; \
     bus.wdata_intg = 7'b0
 
-`define attach_data_bus_slave(bus) \
+`define attach_slave_data_bus_to_core(bus) \
     core_data_bus.gnt = bus.gnt; \
     core_data_bus.rvalid = bus.rvalid; \
     core_data_bus.rdata = bus.rdata; \
     core_data_bus.rdata_intg = bus.rdata_intg; \
     core_data_bus.err = bus.err
+
+function automatic logic is_address_valid(logic [31:0] address);
+    return address inside {
+        [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS],
+        [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS],
+        [DATA_RAM_BASE_ADDRESS:DATA_RAM_END_ADDRESS],
+        [GPIO_BASE_ADDRESS:GPIO_END_ADDRESS],
+        [IOMUX_BASE_ADDRESS:IOMUX_END_ADDRESS],
+        [PMC_BASE_ADDRESS:PMC_END_ADDRESS],
+        [SPI_BASE_ADDRESS:SPI_END_ADDRESS],
+        [TIMER_BASE_ADDRESS:TIMER_END_ADDRESS],
+        [UART_BASE_ADDRESS:UART_END_ADDRESS]
+    };
+endfunction
+
+
+/**
+ * Properties and assertions
+ */
+
+assert property (@(negedge clk) core_data_bus.req |-> is_address_valid(core_data_bus.addr)) else
+    $warning("incorrect address requested: 0x%x", core_data_bus.addr);
 
 
 /**
@@ -126,46 +137,50 @@ always_comb begin
     endcase
 end
 
-/* input signals demultiplexing */
+/* core input signals demultiplexing */
 
 always_comb begin
-    `set_data_bus_slave_inactive(boot_rom_data_bus);
-    `set_data_bus_slave_inactive(code_ram_data_bus);
-    `set_data_bus_slave_inactive(data_ram_data_bus);
-    `set_data_bus_slave_inactive(gpio_data_bus);
-    `set_data_bus_slave_inactive(pmc_data_bus);
-    `set_data_bus_slave_inactive(spi_data_bus);
-    `set_data_bus_slave_inactive(timer_data_bus);
-    `set_data_bus_slave_inactive(uart_data_bus);
+    `attach_zeros_to_slave_data_bus(boot_rom_data_bus);
+    `attach_zeros_to_slave_data_bus(code_ram_data_bus);
+    `attach_zeros_to_slave_data_bus(data_ram_data_bus);
+    `attach_zeros_to_slave_data_bus(gpio_data_bus);
+    `attach_zeros_to_slave_data_bus(iomux_data_bus);
+    `attach_zeros_to_slave_data_bus(pmc_data_bus);
+    `attach_zeros_to_slave_data_bus(spi_data_bus);
+    `attach_zeros_to_slave_data_bus(timer_data_bus);
+    `attach_zeros_to_slave_data_bus(uart_data_bus);
 
     case (state)
     IDLE,
     WAITING_FOR_GRANT: begin
         if (core_data_bus.req) begin
             case (core_data_bus.addr) inside
-            `BOOT_ROM_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(boot_rom_data_bus);
+            [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(boot_rom_data_bus);
             end
-            `CODE_RAM_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(code_ram_data_bus);
+            [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(code_ram_data_bus);
             end
-            `DATA_RAM_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(data_ram_data_bus);
+            [DATA_RAM_BASE_ADDRESS:DATA_RAM_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(data_ram_data_bus);
             end
-            `GPIO_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(gpio_data_bus);
+            [GPIO_BASE_ADDRESS:GPIO_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(gpio_data_bus);
             end
-            `SPI_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(spi_data_bus);
+            [IOMUX_BASE_ADDRESS:IOMUX_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(iomux_data_bus);
             end
-            `UART_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(uart_data_bus);
+            [PMC_BASE_ADDRESS:PMC_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(pmc_data_bus);
             end
-            `TIMER_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(timer_data_bus);
+            [SPI_BASE_ADDRESS:SPI_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(spi_data_bus);
             end
-            `PMC_ADDRESS_SPACE: begin
-                `set_data_bus_slave_active(pmc_data_bus);
+            [TIMER_BASE_ADDRESS:TIMER_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(timer_data_bus);
+            end
+            [UART_BASE_ADDRESS:UART_END_ADDRESS]: begin
+                `attach_core_data_bus_to_slave(uart_data_bus);
             end
             endcase
         end
@@ -174,17 +189,17 @@ always_comb begin
     endcase
 end
 
-/* output signals multiplexing */
+/* core output signals multiplexing */
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
-        responding_slave <= INCORRECT;
+        requested_addr <= 32'b0;
     else
-        responding_slave <= responding_slave_nxt;
+        requested_addr <= requested_addr_nxt;
 end
 
 always_comb begin
-    responding_slave_nxt = responding_slave;
+    requested_addr_nxt = requested_addr;
     core_data_bus.gnt = 1'b0;
     core_data_bus.rvalid = 1'b0;
     core_data_bus.rdata = 32'b0;
@@ -194,104 +209,101 @@ always_comb begin
     case (state)
     IDLE: begin
         if (core_data_bus.req) begin
+            core_data_bus.gnt = 1'b1;
+            requested_addr_nxt = core_data_bus.addr;
+
             case (core_data_bus.addr) inside
-            `BOOT_ROM_ADDRESS_SPACE: begin
-                responding_slave_nxt = BOOT_ROM;
-                `attach_data_bus_slave(boot_rom_data_bus);
+            [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(boot_rom_data_bus);
             end
-            `CODE_RAM_ADDRESS_SPACE: begin
-                responding_slave_nxt = CODE_RAM;
-                `attach_data_bus_slave(code_ram_data_bus);
+            [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(code_ram_data_bus);
             end
-            `DATA_RAM_ADDRESS_SPACE: begin
-                responding_slave_nxt = DATA_RAM;
-                `attach_data_bus_slave(data_ram_data_bus);
+            [DATA_RAM_BASE_ADDRESS:DATA_RAM_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(data_ram_data_bus);
             end
-            `GPIO_ADDRESS_SPACE: begin
-                responding_slave_nxt = GPIO;
-                `attach_data_bus_slave(gpio_data_bus);
+            [GPIO_BASE_ADDRESS:GPIO_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(gpio_data_bus);
             end
-            `SPI_ADDRESS_SPACE: begin
-                responding_slave_nxt = SPI;
-                `attach_data_bus_slave(spi_data_bus);
+            [IOMUX_BASE_ADDRESS:IOMUX_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(iomux_data_bus);
             end
-            `UART_ADDRESS_SPACE: begin
-                responding_slave_nxt = UART;
-                `attach_data_bus_slave(uart_data_bus);
+            [PMC_BASE_ADDRESS:PMC_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(pmc_data_bus);
             end
-            `TIMER_ADDRESS_SPACE: begin
-                responding_slave_nxt = TIMER;
-                `attach_data_bus_slave(timer_data_bus);
+            [SPI_BASE_ADDRESS:SPI_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(spi_data_bus);
             end
-            `PMC_ADDRESS_SPACE: begin
-                responding_slave_nxt = PMC;
-                `attach_data_bus_slave(pmc_data_bus);
+            [TIMER_BASE_ADDRESS:TIMER_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(timer_data_bus);
             end
-            default: begin
-                responding_slave_nxt = INCORRECT;
-                core_data_bus.gnt = 1'b1;
+            [UART_BASE_ADDRESS:UART_END_ADDRESS]: begin
+                `attach_slave_data_bus_to_core(uart_data_bus);
             end
             endcase
         end
     end
     WAITING_FOR_GRANT: begin
-        case (responding_slave)
-        BOOT_ROM: begin
-            `attach_data_bus_slave(boot_rom_data_bus);
+        case (requested_addr) inside
+        [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(boot_rom_data_bus);
         end
-        CODE_RAM: begin
-            `attach_data_bus_slave(code_ram_data_bus);
+        [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(code_ram_data_bus);
         end
-        DATA_RAM: begin
-            `attach_data_bus_slave(data_ram_data_bus);
+        [DATA_RAM_BASE_ADDRESS:DATA_RAM_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(data_ram_data_bus);
         end
-        GPIO: begin
-            `attach_data_bus_slave(gpio_data_bus);
+        [GPIO_BASE_ADDRESS:GPIO_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(gpio_data_bus);
         end
-        SPI: begin
-            `attach_data_bus_slave(spi_data_bus);
+        [IOMUX_BASE_ADDRESS:IOMUX_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(iomux_data_bus);
         end
-        UART: begin
-            `attach_data_bus_slave(uart_data_bus);
+        [PMC_BASE_ADDRESS:PMC_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(pmc_data_bus);
         end
-        TIMER: begin
-            `attach_data_bus_slave(timer_data_bus);
+        [SPI_BASE_ADDRESS:SPI_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(spi_data_bus);
         end
-        PMC: begin
-            `attach_data_bus_slave(pmc_data_bus);
+        [TIMER_BASE_ADDRESS:TIMER_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(timer_data_bus);
         end
-        INCORRECT: begin
-            core_data_bus.gnt = 1'b1;
+        [UART_BASE_ADDRESS:UART_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(uart_data_bus);
         end
         endcase
     end
     WAITING_FOR_RESPONSE: begin
-        case (responding_slave)
-        BOOT_ROM: begin
-            `attach_data_bus_slave(boot_rom_data_bus);
+        case (requested_addr) inside
+        [BOOT_ROM_BASE_ADDRESS:BOOT_ROM_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(boot_rom_data_bus);
         end
-        CODE_RAM: begin
-            `attach_data_bus_slave(code_ram_data_bus);
+        [CODE_RAM_BASE_ADDRESS:CODE_RAM_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(code_ram_data_bus);
         end
-        DATA_RAM: begin
-            `attach_data_bus_slave(data_ram_data_bus);
+        [DATA_RAM_BASE_ADDRESS:DATA_RAM_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(data_ram_data_bus);
         end
-        GPIO: begin
-            `attach_data_bus_slave(gpio_data_bus);
+        [GPIO_BASE_ADDRESS:GPIO_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(gpio_data_bus);
         end
-        SPI: begin
-            `attach_data_bus_slave(spi_data_bus);
+        [IOMUX_BASE_ADDRESS:IOMUX_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(iomux_data_bus);
         end
-        UART: begin
-            `attach_data_bus_slave(uart_data_bus);
+        [PMC_BASE_ADDRESS:PMC_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(pmc_data_bus);
         end
-        TIMER: begin
-            `attach_data_bus_slave(timer_data_bus);
+        [SPI_BASE_ADDRESS:SPI_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(spi_data_bus);
         end
-        PMC: begin
-            `attach_data_bus_slave(pmc_data_bus);
+        [TIMER_BASE_ADDRESS:TIMER_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(timer_data_bus);
         end
-        INCORRECT: begin
+        [UART_BASE_ADDRESS:UART_END_ADDRESS]: begin
+            `attach_slave_data_bus_to_core(uart_data_bus);
+        end
+        default: begin
             core_data_bus.rvalid = 1'b1;
             core_data_bus.err = 1'b1;
         end

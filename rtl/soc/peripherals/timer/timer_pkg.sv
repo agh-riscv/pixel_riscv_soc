@@ -22,10 +22,12 @@ package timer_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define TIMER_CR_OFFSET     12'h000     /* Control Reg offset */
-`define TIMER_SR_OFFSET     12'h004     /* Status Reg offset */
-`define TIMER_CNTR_OFFSET   12'h008     /* Counter Value Reg offset */
-`define TIMER_CMPR_OFFSET   12'h00c     /* Compare Value Reg offset */
+const logic [11:0] TIMER_CR_OFFSET = 12'h000,       /* Control Reg offset */
+                   TIMER_SR_OFFSET = 12'h004,       /* Status Reg offset */
+                   TIMER_CNTR_OFFSET = 12'h008,     /* Counter Value Reg offset */
+                   TIMER_CMPR_OFFSET = 12'h00c,     /* Compare Value Reg offset */
+                   TIMER_IER_OFFSET = 12'h010,      /* Interrupt Enable Reg offset */
+                   TIMER_ISR_OFFSET = 12'h014;      /* Interrupt Status Reg offset */
 
 
 /**
@@ -54,10 +56,22 @@ typedef struct packed {
 } timer_cmpr_t;
 
 typedef struct packed {
+    logic [30:0] res;
+    logic        mtchie;
+} timer_ier_t;
+
+typedef struct packed {
+    logic [30:0] res;
+    logic        mtchf;
+} timer_isr_t;
+
+typedef struct packed {
     timer_cr_t   cr;
     timer_sr_t   sr;
     timer_cntr_t cntr;
     timer_cmpr_t cmpr;
+    timer_ier_t  ier;
+    timer_isr_t  isr;
 } timer_regs_t;
 
 endpackage

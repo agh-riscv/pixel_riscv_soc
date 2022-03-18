@@ -61,8 +61,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         state <= IDLE;
         run_mode <= SINGLE_SHOT;
         counter <= 32'b0;
-    end
-    else begin
+    end else begin
         state <= state_nxt;
         run_mode <= run_mode_nxt;
         counter <= counter_nxt;
@@ -85,13 +84,11 @@ always_comb begin
         if (halt) begin
             state_nxt = IDLE;
             counter_nxt = 32'b0;
-        end
-        else begin
+        end else begin
             if (counter == compare_value) begin
                 state_nxt = (run_mode == SINGLE_SHOT) ? IDLE : COUNT;
                 counter_nxt = 32'b0;
-            end
-            else begin
+            end else begin
                 counter_nxt = counter + 1;
             end
         end

@@ -22,11 +22,13 @@ package spi_pkg;
  * Patterns used for address decoding (memory map)
  */
 
-`define SPI_CR_OFFSET   12'h000     /* Control Reg offset */
-`define SPI_SR_OFFSET   12'h004     /* Status Reg offset*/
-`define SPI_TDR_OFFSET  12'h008     /* Transmitter Data Reg offset */
-`define SPI_RDR_OFFSET  12'h00c     /* Receiver Data Reg offset */
-`define SPI_CDR_OFFSET  12'h010     /* Clock Divider Reg offset*/
+const logic [11:0] SPI_CR_OFFSET = 12'h000,     /* Control Reg offset */
+                   SPI_SR_OFFSET = 12'h004,     /* Status Reg offset*/
+                   SPI_TDR_OFFSET = 12'h008,    /* Transmitter Data Reg offset */
+                   SPI_RDR_OFFSET = 12'h00c,    /* Receiver Data Reg offset */
+                   SPI_CDR_OFFSET = 12'h010,    /* Clock Divider Reg offset*/
+                   SPI_IER_OFFSET = 12'h014,    /* Interrupt Enable Reg offset */
+                   SPI_ISR_OFFSET = 12'h018;    /* Interrupt Status Reg offset */
 
 
 /**
@@ -34,15 +36,18 @@ package spi_pkg;
  */
 
 typedef struct packed {
-    logic [29:0] res;
+    logic [28:0] res;
     logic        cpol;
     logic        cpha;
+    logic        active_ss;
 } spi_cr_t;
 
 typedef struct packed {
-    logic [29:0] res;
-    logic        txact;
-    logic        rxne;
+    logic [27:0] res;
+    logic        tx_fifo_empty;
+    logic        tx_fifo_full;
+    logic        rx_fifo_empty;
+    logic        rx_fifo_full;
 } spi_sr_t;
 
 typedef struct packed {
@@ -61,11 +66,23 @@ typedef struct packed {
 } spi_cdr_t;
 
 typedef struct packed {
+    logic [30:0] res;
+    logic        txfeie;    /* tx fifo empty */
+} spi_ier_t;
+
+typedef struct packed {
+    logic [30:0] res;
+    logic        txfef;
+} spi_isr_t;
+
+typedef struct packed {
     spi_cr_t  cr;
     spi_sr_t  sr;
     spi_tdr_t tdr;
     spi_rdr_t rdr;
     spi_cdr_t cdr;
+    spi_ier_t ier;
+    spi_isr_t isr;
 } spi_regs_t;
 
 endpackage

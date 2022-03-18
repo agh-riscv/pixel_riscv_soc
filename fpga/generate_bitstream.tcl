@@ -47,6 +47,8 @@ read_verilog -sv {
     ../deps/ibex/rtl/ibex_top.sv
     ../deps/ibex/rtl/ibex_wb_stage.sv
 
+    ../rtl/misc/edge_detector.sv
+
     ../rtl/misc/spi_flash_memory/spi_flash_memory.sv
     ../rtl/misc/spi_flash_memory/spi_mem.sv
     ../rtl/misc/spi_flash_memory/spi_slave.sv
@@ -59,10 +61,11 @@ read_verilog -sv {
     ../rtl/soc/interfaces/soc_pm_data.sv
     ../rtl/soc/interfaces/soc_pm_digital_config.sv
     ../rtl/soc/interfaces/soc_pmc_bus.sv
-    ../rtl/soc/interfaces/soc_pmc_pm_ctrl.sv
     ../rtl/soc/interfaces/soc_spi_bus.sv
-    ../rtl/soc/interfaces/soc_timer_bus.sv
     ../rtl/soc/interfaces/soc_uart_bus.sv
+
+    ../rtl/soc/iomux/iomux_pkg.sv
+    ../rtl/soc/iomux/iomux.sv
 
     ../rtl/soc/memories/fpga/ram.sv
     ../rtl/soc/memories/boot_mem.sv
@@ -71,11 +74,11 @@ read_verilog -sv {
     ../rtl/soc/memories/data_ram.sv
     ../rtl/soc/memories/memories.sv
 
-    ../rtl/soc/misc/edge_detector.sv
+    ../rtl/soc/misc/fifo.sv
     ../rtl/soc/misc/serial_clock_generator.sv
 
     ../rtl/soc/peripherals/gpio/gpio_pkg.sv
-    ../rtl/soc/peripherals/gpio/gpio_interrupt_detector.sv
+    ../rtl/soc/peripherals/gpio/gpio_interrupts_detector.sv
     ../rtl/soc/peripherals/gpio/gpio.sv
 
     ../rtl/soc/peripherals/pmc/coprocessor/pmcc_pkg.sv
@@ -86,7 +89,7 @@ read_verilog -sv {
     ../rtl/soc/peripherals/pmc/coprocessor/pmcc_wait_controller.sv
     ../rtl/soc/peripherals/pmc/coprocessor/pmcc.sv
 
-    ../rtl/soc/peripherals/pmc/memories/fpga/pmcc_dpram.sv
+    ../rtl/soc/peripherals/pmc/memories/pmcc_dpram.sv
     ../rtl/soc/peripherals/pmc/memories/pmcc_code_ram.sv
 
     ../rtl/soc/peripherals/pmc/pmc_pkg.sv

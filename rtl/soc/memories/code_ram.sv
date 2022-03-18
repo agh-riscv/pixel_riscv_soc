@@ -68,8 +68,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rvalid <= 1'b0;
         instr_bus.rvalid <= 1'b0;
-    end
-    else begin
+    end else begin
         data_bus.rvalid <= data_bus.gnt;
         instr_bus.rvalid <= instr_bus.gnt;
     end
@@ -91,8 +90,7 @@ always_comb begin
         be = data_bus.be;
         wdata = data_bus.wdata;
         data_bus.gnt = 1'b1;
-    end
-    else if (instr_bus.req) begin
+    end else if (instr_bus.req) begin
         req = 1'b1;
         addr = instr_bus.addr;
         instr_bus.gnt = 1'b1;

@@ -21,7 +21,7 @@ module timer (
     input logic          clk,
     input logic          rst_n,
     ibex_data_bus.slave  data_bus,
-    soc_timer_bus.master timer_bus
+    output logic         irq
 );
 
 
@@ -29,9 +29,9 @@ module timer (
  * Local variables and signals
  */
 
-timer_regs_t timer_regs, timer_regs_nxt;
+timer_regs_t regs, regs_nxt;
 logic [31:0] counter;
-logic        active, match_occurred;
+logic        active, match_occurred, mtch_irq;
 
 
 /**
@@ -40,8 +40,8 @@ logic        active, match_occurred;
 
 assign data_bus.rdata_intg = 7'b0;
 
-/* 0x004: status reg */
-assign timer_bus.irq = timer_regs.sr.mtch;
+assign irq = mtch_irq;
+assign mtch_irq = regs.ier.mtchie & regs.isr.mtchf;
 
 
 /**
@@ -54,10 +54,10 @@ timer_core u_timer_core (
     .counter,
     .clk,
     .rst_n,
-    .trigger(timer_regs.cr.trg),
-    .halt(timer_regs.cr.hlt),
-    .single_shot(timer_regs.cr.sngl),
-    .compare_value(timer_regs.cmpr)
+    .trigger(regs.cr.trg),
+    .halt(regs.cr.hlt),
+    .single_shot(regs.cr.sngl),
+    .compare_value(regs.cmpr)
 );
 
 
@@ -67,9 +67,18 @@ timer_core u_timer_core (
 
 function automatic logic is_offset_valid(logic [11:0] offset);
     return offset inside {
-        `TIMER_CR_OFFSET, `TIMER_SR_OFFSET, `TIMER_CNTR_OFFSET, `TIMER_CMPR_OFFSET
+        TIMER_CR_OFFSET, TIMER_SR_OFFSET, TIMER_CNTR_OFFSET, TIMER_CMPR_OFFSET,
+        TIMER_IER_OFFSET, TIMER_ISR_OFFSET
     };
 endfunction
+
+
+/**
+ * Properties and assertions
+ */
+
+assert property (@(negedge clk) data_bus.req |-> is_offset_valid(data_bus.addr[11:0])) else
+    $warning("incorrect offset requested: 0x%x", data_bus.addr[11:0]);
 
 
 /**
@@ -86,8 +95,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rvalid <= 1'b0;
         data_bus.err <= 1'b0;
-    end
-    else begin
+    end else begin
         data_bus.rvalid <= data_bus.gnt;
         data_bus.err <= data_bus.gnt && !is_offset_valid(data_bus.addr[11:0]);
     end
@@ -97,35 +105,41 @@ end
 
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
-        timer_regs <= {{4{32'b0}}};
+        regs <= {{6{32'b0}}};
     else
-        timer_regs <= timer_regs_nxt;
+        regs <= regs_nxt;
 end
 
 always_comb begin
-    timer_regs_nxt = timer_regs;
+    regs_nxt = regs;
 
     if (data_bus.req && data_bus.we) begin
         case (data_bus.addr[11:0])
-        `TIMER_CR_OFFSET:   timer_regs_nxt.cr = data_bus.wdata;
-        `TIMER_SR_OFFSET:   timer_regs_nxt.sr = data_bus.wdata;
-        `TIMER_CNTR_OFFSET: timer_regs_nxt.cntr = data_bus.wdata;
-        `TIMER_CMPR_OFFSET: timer_regs_nxt.cmpr = data_bus.wdata;
+        TIMER_CR_OFFSET:    regs_nxt.cr = data_bus.wdata;
+        TIMER_SR_OFFSET:    regs_nxt.sr = data_bus.wdata;
+        TIMER_CNTR_OFFSET:  regs_nxt.cntr = data_bus.wdata;
+        TIMER_CMPR_OFFSET:  regs_nxt.cmpr = data_bus.wdata;
+        TIMER_IER_OFFSET:   regs_nxt.ier = data_bus.wdata;
+        TIMER_ISR_OFFSET:   regs_nxt.isr = data_bus.wdata;
         endcase
     end
 
     /* 0x000: control reg */
-    if (timer_regs.cr.hlt)
-        timer_regs_nxt.cr.hlt = 1'b0;
+    if (regs.cr.hlt)
+        regs_nxt.cr.hlt = 1'b0;
 
-    if (timer_regs.cr.trg)
-        timer_regs_nxt.cr.trg = 1'b0;
+    if (regs.cr.trg)
+        regs_nxt.cr.trg = 1'b0;
 
     /* 0x004: status reg */
-    timer_regs_nxt.sr.act = active;
+    regs_nxt.sr.act = active;
 
     if (match_occurred)
-        timer_regs_nxt.sr.mtch = 1'b1;
+        regs_nxt.sr.mtch = 1'b1;
+
+    /* 0x014: interrupt status reg */
+    if (!regs.sr.mtch && regs_nxt.sr.mtch)
+        regs_nxt.isr.mtchf = 1'b1;
 end
 
 /* Registers readout */
@@ -133,14 +147,15 @@ end
 always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         data_bus.rdata <= 32'b0;
-    end
-    else begin
+    end else begin
         if (data_bus.req) begin
             case (data_bus.addr[11:0])
-            `TIMER_CR_OFFSET:   data_bus.rdata <= timer_regs.cr;
-            `TIMER_SR_OFFSET:   data_bus.rdata <= timer_regs.sr;
-            `TIMER_CNTR_OFFSET: data_bus.rdata <= timer_regs.cntr;
-            `TIMER_CMPR_OFFSET: data_bus.rdata <= timer_regs.cmpr;
+            TIMER_CR_OFFSET:    data_bus.rdata <= regs.cr;
+            TIMER_SR_OFFSET:    data_bus.rdata <= regs.sr;
+            TIMER_CNTR_OFFSET:  data_bus.rdata <= regs.cntr;
+            TIMER_CMPR_OFFSET:  data_bus.rdata <= regs.cmpr;
+            TIMER_IER_OFFSET:   data_bus.rdata <= regs.ier;
+            TIMER_ISR_OFFSET:   data_bus.rdata <= regs.isr;
             endcase
         end
     end

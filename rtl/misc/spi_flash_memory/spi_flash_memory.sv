@@ -93,8 +93,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         addr <= 'b0;
         bytes_counter <= 'b0;
         tx_data <= 'b0;
-    end
-    else begin
+    end else begin
         addr <= addr_nxt;
         bytes_counter <= bytes_counter_nxt;
         tx_data <= tx_data_nxt;
@@ -121,8 +120,7 @@ always_comb begin
                 if (bytes_counter == 3) begin
                     addr_nxt = (addr == 4095) ? 0 : addr + 4;
                     bytes_counter_nxt = 0;
-                end
-                else begin
+                end else begin
                     bytes_counter_nxt = bytes_counter + 1;
                 end
             end

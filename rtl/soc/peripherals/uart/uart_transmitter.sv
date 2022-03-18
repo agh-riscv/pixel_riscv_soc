@@ -60,8 +60,7 @@ always_ff @(posedge clk or negedge rst_n) begin
         state <= IDLE;
         bits_counter <= 3'b0;
         edges_counter <= 4'b0;
-    end
-    else begin
+    end else begin
         state <= state_nxt;
         bits_counter <= bits_counter_nxt;
         edges_counter <= edges_counter_nxt;
@@ -83,8 +82,7 @@ always_comb begin
             if (edges_counter == 15) begin
                 state_nxt = ACTIVE;
                 edges_counter_nxt = 4'b0;
-            end
-            else begin
+            end else begin
                 edges_counter_nxt = edges_counter + 1;
             end
         end
@@ -97,12 +95,10 @@ always_comb begin
                 if (bits_counter == 7) begin
                     state_nxt = STOP;
                     bits_counter_nxt = 3'b0;
-                end
-                else begin
+                end else begin
                     bits_counter_nxt = bits_counter + 1;
                 end
-            end
-            else begin
+            end else begin
                 edges_counter_nxt = edges_counter + 1;
             end
         end
@@ -112,8 +108,7 @@ always_comb begin
             if (edges_counter == 15) begin
                 state_nxt = IDLE;
                 edges_counter_nxt = 4'b0;
-            end
-            else begin
+            end else begin
                 edges_counter_nxt = edges_counter + 1;
             end
         end
@@ -128,8 +123,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         sout <= 1'b1;
         tx_buffer <= 8'b0;
-    end
-    else begin
+    end else begin
         sout <= sout_nxt;
         tx_buffer <= tx_buffer_nxt;
     end
@@ -157,8 +151,7 @@ always_comb begin
         if (sck_rising_edge && edges_counter == 15) begin
             if (bits_counter == 7) begin
                 sout_nxt = 1'b1;
-            end
-            else begin
+            end else begin
                 sout_nxt = tx_buffer[0];
                 tx_buffer_nxt = tx_buffer>>1;
             end

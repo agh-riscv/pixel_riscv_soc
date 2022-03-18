@@ -16,22 +16,30 @@
  */
 
 module spi_master (
-    output logic       ss,
-    output logic       sck,
-    output logic       mosi,
-    output logic       busy,
-    output logic       rx_data_valid,
-    output logic [7:0] rx_data,
-
     input logic        clk,
     input logic        rst_n,
-    input logic        tx_data_valid,
-    input logic [7:0]  tx_data,
-    input logic        clk_divider_valid,
-    input logic [7:0]  clk_divider,
+
+    output logic       ss0,
+    output logic       ss1,
+    output logic       sck,
+    output logic       mosi,
     input logic        miso,
+
+    input logic [7:0]  clk_divider,
+    input logic        clk_divider_valid,
+    input logic        active_ss,
     input logic        cpol,
-    input logic        cpha
+    input logic        cpha,
+
+    output logic       rx_fifo_full,
+    output logic       rx_fifo_empty,
+    output logic [7:0] rx_fifo_rdata,
+    input logic        rx_fifo_pop,
+
+    output logic       tx_fifo_full,
+    output logic       tx_fifo_empty,
+    input logic [7:0]  tx_fifo_wdata,
+    input logic        tx_fifo_push
 );
 
 
@@ -39,10 +47,11 @@ module spi_master (
  * User defined types
  */
 
-typedef enum logic [1:0] {
+typedef enum logic [2:0] {
     IDLE,
     START,
-    ACTIVE,
+    BYTE_TRANSMISSION,
+    INTER_BYTE_DELAY,
     STOP
 } state_t;
 
@@ -51,13 +60,19 @@ typedef enum logic [1:0] {
  * Local variables and signals
  */
 
+localparam  FIFO_SIZE = 8;
+
 state_t     state, state_nxt;
-logic       ss_nxt, sck_nxt, mosi_nxt, rx_data_valid_nxt;
 logic [3:0] bits_counter, bits_counter_nxt;
-logic [7:0] tx_buffer, tx_buffer_nxt;
-logic [7:0] rx_data_nxt, rx_buffer, rx_buffer_nxt;
+
+logic       ss, ss_nxt, sck_nxt, mosi_nxt;
+
 logic       sck_generator_en, sck_generator_en_nxt, leading_edge, trailing_edge;
-logic       sck_polarity, sck_phase, sck_polarity_nxt, sck_phase_nxt;
+
+logic [7:0] rx_fifo_wdata, tx_fifo_rdata;
+logic       rx_fifo_push, tx_fifo_pop;
+
+logic [7:0] rx_buffer, rx_buffer_nxt, tx_buffer, tx_buffer_nxt;
 
 
 /**
@@ -75,6 +90,34 @@ serial_clock_generator u_serial_clock_generator (
     .clk_divider
 );
 
+fifo #(
+    .SIZE(FIFO_SIZE)
+) u_rx_fifo (
+    .clk,
+    .rst_n,
+
+    .full(rx_fifo_full),
+    .empty(rx_fifo_empty),
+    .rdata(rx_fifo_rdata),
+    .push(rx_fifo_push),
+    .pop(rx_fifo_pop),
+    .wdata(rx_fifo_wdata)
+);
+
+fifo #(
+    .SIZE(FIFO_SIZE)
+) u_tx_fifo (
+    .clk,
+    .rst_n,
+
+    .full(tx_fifo_full),
+    .empty(tx_fifo_empty),
+    .rdata(tx_fifo_rdata),
+    .push(tx_fifo_push),
+    .pop(tx_fifo_pop),
+    .wdata(tx_fifo_wdata)
+);
+
 
 /**
  * Module internal logic
@@ -86,8 +129,7 @@ always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         state <= IDLE;
         bits_counter <= 4'b0;
-    end
-    else begin
+    end else begin
         state <= state_nxt;
         bits_counter <= bits_counter_nxt;
     end
@@ -99,25 +141,29 @@ always_comb begin
 
     case (state)
     IDLE: begin
-        if (tx_data_valid)
+        if (!tx_fifo_empty)
             state_nxt = START;
     end
     START: begin
-        state_nxt = ACTIVE;
+        if (trailing_edge)
+            state_nxt = BYTE_TRANSMISSION;
     end
-    ACTIVE: begin
+    BYTE_TRANSMISSION: begin
         if (leading_edge) begin
             bits_counter_nxt = bits_counter + 1;
-        end
-        else if (trailing_edge) begin
+        end else if (trailing_edge) begin
             if (bits_counter == 8) begin
-                state_nxt = STOP;
+                state_nxt = tx_fifo_empty ? STOP : INTER_BYTE_DELAY;
                 bits_counter_nxt = 4'b0;
             end
         end
     end
+    INTER_BYTE_DELAY: begin
+        if (trailing_edge)
+            state_nxt = BYTE_TRANSMISSION;
+    end
     STOP: begin
-        if (leading_edge)
+        if (trailing_edge)
             state_nxt = IDLE;
     end
     default: begin
@@ -133,100 +179,104 @@ always_ff @(posedge clk or negedge rst_n) begin
         ss <= 1'b1;
         sck <= 1'b0;
         mosi <= 1'b0;
-        rx_data_valid <= 1'b0;
-        rx_data <= 8'b0;
         sck_generator_en <= 1'b0;
-        tx_buffer <= 8'b0;
         rx_buffer <= 8'b0;
-        sck_polarity <= 1'b0;
-        sck_phase <= 1'b0;
-    end
-    else begin
+        tx_buffer <= 8'b0;
+    end else begin
         ss <= ss_nxt;
         sck <= sck_nxt;
         mosi <= mosi_nxt;
-        rx_data_valid <= rx_data_valid_nxt;
-        rx_data <= rx_data_nxt;
         sck_generator_en <= sck_generator_en_nxt;
-        tx_buffer <= tx_buffer_nxt;
         rx_buffer <= rx_buffer_nxt;
-        sck_polarity <= sck_polarity_nxt;
-        sck_phase <= sck_phase_nxt;
+        tx_buffer <= tx_buffer_nxt;
     end
 end
 
 always_comb begin
-    busy = 1'b1;
     ss_nxt = ss;
     sck_nxt = sck;
     mosi_nxt = mosi;
-    rx_data_valid_nxt = 1'b0;
-    rx_data_nxt = rx_data;
     sck_generator_en_nxt = sck_generator_en;
     tx_buffer_nxt = tx_buffer;
     rx_buffer_nxt = rx_buffer;
-    sck_polarity_nxt = sck_polarity;
-    sck_phase_nxt = sck_phase;
+    tx_fifo_pop = 1'b0;
+    rx_fifo_push = 1'b0;
+    rx_fifo_wdata = 8'b0;
 
     case (state)
     IDLE: begin
-        busy = 1'b0;
         sck_nxt = cpol;
-        sck_polarity_nxt = cpol;
-        sck_phase_nxt = cpha;
     end
     START: begin
         ss_nxt = 1'b0;
         sck_generator_en_nxt = 1'b1;
-        rx_buffer_nxt = 8'b0;
-        tx_buffer_nxt = tx_data;
 
-        if (~sck_phase) begin
-            mosi_nxt = tx_data[7];
-            tx_buffer_nxt = {tx_data[6:0], 1'b0};
+        if (trailing_edge) begin
+            rx_buffer_nxt = 8'b0;
+            tx_buffer_nxt = tx_fifo_rdata;
+            tx_fifo_pop = 1'b1;
+
+            if (~cpha) begin
+                mosi_nxt = tx_fifo_rdata[7];
+                tx_buffer_nxt = {tx_fifo_rdata[6:0], 1'b0};
+            end
         end
     end
-    ACTIVE: begin
+    BYTE_TRANSMISSION: begin
         if (leading_edge) begin
-            sck_nxt = ~sck_polarity;
+            sck_nxt = ~cpol;
 
-            if (~sck_phase) begin
+            if (~cpha) begin
                 rx_buffer_nxt = {rx_buffer[6:0], miso};
-            end
-            else begin
+            end else begin
                 mosi_nxt = tx_buffer[7];
                 tx_buffer_nxt = {tx_buffer[6:0], 1'b0};
             end
-        end
-        else if (trailing_edge) begin
-            sck_nxt = sck_polarity;
+        end else if (trailing_edge) begin
+            sck_nxt = cpol;
 
-            if (~sck_phase) begin
+            if (~cpha) begin
                 mosi_nxt = tx_buffer[7];
                 tx_buffer_nxt = {tx_buffer[6:0], 1'b0};
-            end
-            else begin
+            end else begin
                 rx_buffer_nxt = {rx_buffer[6:0], miso};
             end
 
             if (bits_counter == 8) begin
-                rx_data_valid_nxt = 1'b1;
+                rx_fifo_wdata = rx_buffer_nxt;
+                rx_fifo_push = 1'b1;
+            end
+        end
+    end
+    INTER_BYTE_DELAY: begin
+        if (trailing_edge) begin
+            tx_buffer_nxt = tx_fifo_rdata;
+            tx_fifo_pop = 1'b1;
 
-                if (sck_phase)
-                    rx_data_nxt = {rx_buffer[6:0], miso};
-                else
-                    rx_data_nxt = rx_buffer;
+            if (~cpha) begin
+                mosi_nxt = tx_fifo_rdata[7];
+                tx_buffer_nxt = {tx_fifo_rdata[6:0], 1'b0};
             end
         end
     end
     STOP: begin
-        if (leading_edge) begin
+        if (trailing_edge) begin
             ss_nxt = 1'b1;
             sck_generator_en_nxt = 1'b0;
         end
     end
     default: ;
     endcase
+end
+
+always_comb begin
+    if (active_ss) begin
+        ss1 = ss;
+        ss0 = 1'b1;
+    end else begin
+        ss1 = 1'b1;
+        ss0 = ss;
+    end
 end
 
 endmodule
